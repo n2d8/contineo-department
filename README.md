@@ -35,6 +35,7 @@ The following contains the assumptions and requirements to implement the service
 9. Deleting an inventory record represents the retirement of a product, typically because its supply contract has expired.
 10. Any remaining quantity is assumed to be returned to the provider and is not transferred to another inventory record and is no longer managed by the service.
 11. Browsing of inventory records provides a snapshot of all existing inventory at the point in time of the query.
+12. Unknown API fields in the JSON bodies are rejected with 400 bad request error.
 
 # API Design
 
@@ -60,3 +61,43 @@ Outline the endpoints needed in the API to fulfil the above requirements and ass
     - Validate the updated sub-category list against all existing inventory records that use the category.
     - Reject the update if it would remove a sub-category that is still used by an existing inventory record.
     - Return an error identifying the sub-category or sub-categories that must remain available.
+
+# Database Schema
+
+Outline the datbase table schema for the service.
+```sql
+CREATE TABLE category (
+    id            BIGINT PRIMARY KEY,
+    category_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE sub_category (
+    id               BIGINT PRIMARY KEY,
+    sub_category_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE category_sub_category (
+    category_id     BIGINT NOT NULL,
+    sub_category_id BIGINT NOT NULL,
+    PRIMARY KEY (category_id, sub_category_id),
+    FOREIGN KEY (category_id) REFERENCES category(id),
+    FOREIGN KEY (sub_category_id) REFERENCES sub_category(id)
+);
+
+CREATE TABLE inventory (
+    id          BIGINT PRIMARY KEY,
+    inventory_name VARCHAR(100) NOT NULL,
+    category_id BIGINT NOT NULL,
+    quantity    INT NOT NULL,
+    description VARCHAR(500),
+    FOREIGN KEY (category_id) REFERENCES category(id)
+);
+
+CREATE TABLE inventory_sub_category (
+    inventory_id    BIGINT NOT NULL,
+    sub_category_id BIGINT NOT NULL,
+    PRIMARY KEY (inventory_id, sub_category_id),
+    FOREIGN KEY (inventory_id) REFERENCES inventory(id),
+    FOREIGN KEY (sub_category_id) REFERENCES sub_category(id)
+);
+```
