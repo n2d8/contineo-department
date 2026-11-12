@@ -46,7 +46,7 @@ public class Inventory {
     private Set<SubCategory> subCategories = new HashSet<>(); 
     
     @Column(name = "quantity", nullable = false)
-    private int quantity;
+    private Integer quantity;
 
     @Column(name = "description", length = 500)
     private String description;
@@ -103,7 +103,7 @@ public class Inventory {
         this.subCategories = subCategories;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
