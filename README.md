@@ -37,6 +37,7 @@ The following contains the assumptions and requirements to implement the service
 11. Browsing of inventory records provides a snapshot of all existing inventory at the point in time of the query.
 12. Unknown API fields in the JSON bodies are rejected with 400 bad request error.
 13. Category and sub-category have many to many relationship. Footwear and shoe can both be a category and a sub-category trainers can be categorized as both footwear and shoe.
+14. Inventory name is not unique, so different users can create an inventory for their specific product even if they have the same product name.
 
 # API Design
 
@@ -90,9 +91,11 @@ CREATE TABLE inventory (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     inventory_name VARCHAR(100) NOT NULL,
     category_id BIGINT NOT NULL,
+    shop_name   VARCHAR(100) NOT NULL,
     quantity    INT NOT NULL,
     description VARCHAR(500),
-    FOREIGN KEY (category_id) REFERENCES category(id)
+    FOREIGN KEY (category_id) REFERENCES category(id),
+    CONSTRAINT unique_inventory_name_shop_name UNIQUE (inventory_name, shop_name)
 );
 
 CREATE TABLE inventory_sub_category (
