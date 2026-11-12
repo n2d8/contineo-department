@@ -20,7 +20,7 @@ public class SubCategory {
     private Long id;
 
     @Column(name = "sub_category_name", nullable = false, length = 100, unique = true)
-    private String subCategoryName;
+    private String name;
 
     @ManyToMany(mappedBy = "subCategories")
     private Set<Category> categories = new HashSet<>();
@@ -28,7 +28,7 @@ public class SubCategory {
     protected SubCategory() {}
 
     public SubCategory(String subCategoryName) {
-        this.subCategoryName = subCategoryName;
+        this.name = subCategoryName;
     }
 
     public Long getId() {
@@ -36,7 +36,7 @@ public class SubCategory {
     }
 
     public String getName() {
-        return subCategoryName;
+        return name;
     }
 
     public Set<Category> getCategories() {

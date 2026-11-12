@@ -22,7 +22,7 @@ public class Category {
     private Long id;
 
     @Column(name = "category_name", nullable = false, length = 100, unique = true)
-    private String categoryName;
+    private String name;
 
     @ManyToMany 
     @JoinTable(name = "category_sub_category", 
@@ -33,7 +33,7 @@ public class Category {
     protected Category() {}
 
     public Category(String categoryName) {
-        this.categoryName = categoryName;   
+        this.name = categoryName;   
     }
 
     public Long getId() {
@@ -41,7 +41,7 @@ public class Category {
     }
 
     public String getName() {
-        return categoryName;
+        return name;
     }
 
     public Set<SubCategory> getSubCategories() {
