@@ -36,6 +36,7 @@ The following contains the assumptions and requirements to implement the service
 10. Any remaining quantity is assumed to be returned to the provider and is not transferred to another inventory record and is no longer managed by the service.
 11. Browsing of inventory records provides a snapshot of all existing inventory at the point in time of the query.
 12. Unknown API fields in the JSON bodies are rejected with 400 bad request error.
+13. Category and sub-category have many to many relationship. Footwear and shoe can both be a category and a sub-category trainers can be categorized as both footwear and shoe.
 
 # API Design
 
