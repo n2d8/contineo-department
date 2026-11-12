@@ -65,15 +65,16 @@ Outline the endpoints needed in the API to fulfil the above requirements and ass
 
 # Database Schema
 
-Outline the datbase table schema for the service.
+The current database design is used for H2 database and outline the database table schema for the service. Further considerations will be needed if the service is deployed across multiple database instances where a globally unique identifier, such as UUID, may be preferred over auto-increment ID.
+
 ```sql
 CREATE TABLE category (
-    id            BIGINT PRIMARY KEY,
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
     category_name VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE TABLE sub_category (
-    id               BIGINT PRIMARY KEY,
+    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
     sub_category_name VARCHAR(100) NOT NULL UNIQUE
 );
 
@@ -86,7 +87,7 @@ CREATE TABLE category_sub_category (
 );
 
 CREATE TABLE inventory (
-    id          BIGINT PRIMARY KEY,
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     inventory_name VARCHAR(100) NOT NULL,
     category_id BIGINT NOT NULL,
     quantity    INT NOT NULL,
