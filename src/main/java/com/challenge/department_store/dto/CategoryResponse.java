@@ -15,16 +15,4 @@ public record CategoryResponse(Long id, String name, Set<String> subCategories) 
                                             .map(SubCategory::getName)
                                             .collect(Collectors.toSet()));
     }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Set<String> getSubCategories() {
-        return subCategories;
-    }
 }

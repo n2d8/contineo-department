@@ -54,8 +54,8 @@ class CategoryServiceTest {
 
         CategoryResponse response = categoryService.createCategory(request);
 
-        assertThat(response.getName()).isEqualTo("Footwear");
-        assertThat(response.getSubCategories()).containsExactlyInAnyOrder("Sneakers","Cleats");
+        assertThat(response.name()).isEqualTo("Footwear");
+        assertThat(response.subCategories()).containsExactlyInAnyOrder("Sneakers","Cleats");
     }
 
 
@@ -70,8 +70,8 @@ class CategoryServiceTest {
 
         CategoryResponse response = categoryService.createCategory(request);
 
-        assertThat(response.getName()).isEqualTo("Footwear");
-        assertThat(response.getSubCategories()).isEmpty();
+        assertThat(response.name()).isEqualTo("Footwear");
+        assertThat(response.subCategories()).isEmpty();
     }
 
     @Test
@@ -101,16 +101,16 @@ class CategoryServiceTest {
         UpdateCategoryRequest request = new UpdateCategoryRequest(
             Set.of("Cleats"));
         CategoryResponse response = categoryService.updateCategory(request, "Footwear");
-        assertThat(response.getName()).isEqualTo("Footwear");
-        assertThat(response.getSubCategories()).containsExactly("Cleats");
+        assertThat(response.name()).isEqualTo("Footwear");
+        assertThat(response.subCategories()).containsExactly("Cleats");
         request = new UpdateCategoryRequest(
             Set.of("Sneakers"));
         response = categoryService.updateCategory(request, "Footwear");
-        assertThat(response.getSubCategories()).containsExactly("Sneakers");
+        assertThat(response.subCategories()).containsExactly("Sneakers");
         request = new UpdateCategoryRequest(
             Set.of("Sneakers", "Cleats"));
         response = categoryService.updateCategory(request, "Footwear");
-        assertThat(response.getSubCategories()).containsExactlyInAnyOrder("Sneakers", "Cleats");
+        assertThat(response.subCategories()).containsExactlyInAnyOrder("Sneakers", "Cleats");
     }
 
     @Test 
@@ -129,7 +129,7 @@ class CategoryServiceTest {
 
         List<CategoryResponse> categoriesResponse = categoryService.getAllCategories();
         assertThat(categoriesResponse).hasSize(1);
-        assertThat(categoriesResponse.get(0).getName()).isEqualTo("Footwear");
+        assertThat(categoriesResponse.get(0).name()).isEqualTo("Footwear");
     }
 
     @Test 
@@ -138,8 +138,8 @@ class CategoryServiceTest {
             .thenReturn(Optional.of(categoryWithSubCategories()));
 
         CategoryResponse response = categoryService.getCategoryByName("Footwear");
-        assertThat(response.getName()).isEqualTo("Footwear");
-        assertThat(response.getSubCategories()).containsExactlyInAnyOrder("Sneakers", "Cleats");
+        assertThat(response.name()).isEqualTo("Footwear");
+        assertThat(response.subCategories()).containsExactlyInAnyOrder("Sneakers", "Cleats");
     }
 
     @Test 

@@ -28,13 +28,13 @@ public class CategoryService {
     }
 
     public CategoryResponse createCategory(CreateCategoryRequest request) {
-        categoryRepository.findByNameIgnoreCase(request.getName()).ifPresent(foundCategory -> {
+        categoryRepository.findByNameIgnoreCase(request.name()).ifPresent(foundCategory -> {
             //TODO: Replace DuplicateKeyException as its database level and use a dedicated business level Exception instead
-            throw new DuplicateKeyException("Duplicate case-insensitive category name: " + request.getName() + " and " + foundCategory.getName());
+            throw new DuplicateKeyException("Duplicate case-insensitive category name: " + request.name() + " and " + foundCategory.getName());
         });
 
-        Category newCategory = new Category(request.getName());
-        addSubCategoryFromNames(newCategory, request.getSubCategories());
+        Category newCategory = new Category(request.name());
+        addSubCategoryFromNames(newCategory, request.subCategories());
 
         return CategoryResponse.from(categoryRepository.save(newCategory));
     }

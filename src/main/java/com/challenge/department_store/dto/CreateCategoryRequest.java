@@ -11,12 +11,4 @@ public record CreateCategoryRequest(
     String name, 
     
     @Size(max = 100)
-    Set<@Size(max = 100) String> subCategories) {
-
-    public String getName() {
-        return name;
-    }
-
-    public Set<String> getSubCategories() {
-        return subCategories;
-    }}
+    Set<@Size(max = 100) String> subCategories) {}
