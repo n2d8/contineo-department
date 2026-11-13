@@ -38,6 +38,7 @@ The following contains the assumptions and requirements to implement the service
 12. Unknown API fields in the JSON bodies are rejected with 400 bad request error.
 13. Category and sub-category have many to many relationship. Footwear and shoe can both be a category and a sub-category trainers can be categorized as both footwear and shoe.
 14. Inventory name is not unique, so different users can create an inventory for their specific product even if they have the same product name.
+15. Secure the API calls with JWK and JWT pair as bonus.
 
 # API Design
 
