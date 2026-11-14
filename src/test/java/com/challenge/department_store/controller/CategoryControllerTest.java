@@ -11,6 +11,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -61,6 +62,28 @@ public class CategoryControllerTest {
                     """))
             .hasStatus(HttpStatus.CREATED)
             .bodyJson().extractingPath("$.name").isEqualTo("Electronics");
+    }
+
+    @Test
+    void testCreateCategoryReturns409WhenNameAlreadyExistsIgnoringCase() {
+        when(categoryService.createCategory(any(CreateCategoryRequest.class)))
+            .thenThrow(new DuplicateKeyException("Duplicate case-insensitive category name."));
+
+        assertThat(mvc.post().uri("/api/categories")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"name": "ELECTRONICS", "subCategories": []}
+                    """))
+            .hasStatus(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void testGetCategoryByNameReturns404WhenNotFound() {
+        when(categoryService.getCategoryByName("unknown-category"))
+            .thenThrow(new EntityNotFoundException("Category not found: unknown-category"));
+
+        assertThat(mvc.get().uri("/api/categories/unknown-category"))
+            .hasStatus(HttpStatus.NOT_FOUND);
     }
 
     @Test
