@@ -52,6 +52,8 @@ Outline the endpoints needed in the API to fulfil the above requirements and ass
     - Create a new inventory record for a product.
 - PUT api/inventories/{id}
     - Update an existing inventory record.
+- PUT api/inventories/{id}/quantity
+    - Update an existing inventory record's quantity.
 - DELETE api/inventories/{id}
     - Delete an existing inventory record and retire the associated product.
 - GET api/categories
