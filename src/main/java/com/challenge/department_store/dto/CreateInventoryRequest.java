@@ -12,7 +12,7 @@ public record CreateInventoryRequest(
 
     @NotBlank
     @Size(max = 100)
-    String intentoryName,
+    String name,
 
     @NotBlank 
     @Size(max = 100)
