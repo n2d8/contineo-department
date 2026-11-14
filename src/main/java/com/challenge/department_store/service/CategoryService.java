@@ -2,6 +2,7 @@ package com.challenge.department_store.service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -10,8 +11,10 @@ import com.challenge.department_store.dto.CategoryResponse;
 import com.challenge.department_store.dto.CreateCategoryRequest;
 import com.challenge.department_store.dto.UpdateCategoryRequest;
 import com.challenge.department_store.entity.Category;
+import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
 import com.challenge.department_store.repository.CategoryRepository;
+import com.challenge.department_store.repository.InventoryRepository;
 import com.challenge.department_store.repository.SubCategoryRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -21,10 +24,12 @@ public class CategoryService {
     
     private final CategoryRepository categoryRepository;
     private final SubCategoryRepository subCategoryRepository;
+    private final InventoryRepository inventoryRepository;
 
-    public CategoryService(CategoryRepository categoryRepository, SubCategoryRepository subCategoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, SubCategoryRepository subCategoryRepository, InventoryRepository inventoryRepository) {
         this.categoryRepository = categoryRepository;
         this.subCategoryRepository = subCategoryRepository;
+        this.inventoryRepository = inventoryRepository;
     }
 
     public CategoryResponse createCategory(CreateCategoryRequest request) {
@@ -44,6 +49,10 @@ public class CategoryService {
             //TODO: Replace NameNotFoundException with dedicated business logic Exception instead
             () -> new EntityNotFoundException( "Category not found: " + categoryName)
         );
+        if (!isSubCategoryUpdateValid(category, request.getSubCategories())) {
+            //TODO: Replace IllegalStateException with dedicated business logic Exception instead
+            throw new IllegalStateException("Cannot replace sub categories in use.");
+        }
         category.getSubCategories().clear();
         addSubCategoryFromNames(category, request.getSubCategories());
 
@@ -68,5 +77,26 @@ public class CategoryService {
                                             .orElseGet(() -> subCategoryRepository.save(new SubCategory(subCategoryName)));
             categoryToAdd.addSubCategory(sub);
         }
+    }
+
+    private boolean isSubCategoryUpdateValid(Category currentCategory, Set<String> newSubCategorieNames) {
+        Set<String> currentSubCategories = getSubCategoriesNamesFromSet(currentCategory.getSubCategories());
+        if (newSubCategorieNames.containsAll(currentSubCategories)) {
+            return true;
+        }
+        
+        List<Inventory> inventories = inventoryRepository.findByCategory(currentCategory);
+
+        for (Inventory inv: inventories) {
+            if (!newSubCategorieNames.containsAll(getSubCategoriesNamesFromSet(inv.getSubCategories()))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private Set<String> getSubCategoriesNamesFromSet (Set<SubCategory> subCategories) {
+        return subCategories.stream().map(SubCategory::getName).collect(Collectors.toSet());
     }
 }

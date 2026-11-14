@@ -16,6 +16,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MockMvcTester.MockMvcRequestBuilder;
+import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.persistence.EntityNotFoundException;
 
 import com.challenge.department_store.dto.CategoryResponse;
 import com.challenge.department_store.dto.CreateCategoryRequest;
@@ -24,26 +27,29 @@ import com.challenge.department_store.service.CategoryService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@WebMvcTest(CategoryController.class)
+@WebMvcTest(
+    value = CategoryController.class,
+    properties = "spring.jackson.deserialization.fail-on-unknown-properties=true"
+)
 public class CategoryControllerTest {
 
     @Autowired
-    private MockMvcTester mvc;   // ← instead of MockMvc
+    private MockMvcTester mvc;
 
     @MockitoBean
     private CategoryService categoryService;
 
     @Test
-    void testGetAllCategories_returns200WithList() {
+    void testGetAllCategoriesReturns200WithList() {
         when(categoryService.getAllCategories()).thenReturn(List.of());
 
         assertThat(mvc.get().uri("/api/categories"))
             .hasStatusOk()
-            .bodyJson().isStrictlyEqualTo("[]");;
+            .bodyJson().isStrictlyEqualTo("[]");
     }
 
     @Test
-    void testCreateCategory_returns201() {
+    void testCreateCategoryReturns201() {
         CategoryResponse response = new CategoryResponse(1L, "Electronics", Set.of());
         when(categoryService.createCategory(any(CreateCategoryRequest.class)))
             .thenReturn(response);
@@ -58,7 +64,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void testUpdateCategory_returns200() {
+    void testUpdateCategoryReturns200() {
         CategoryResponse response = new CategoryResponse(1L, "Electronics", Set.of());
         when(categoryService.updateCategory(any(UpdateCategoryRequest.class), eq("Electronics")))
             .thenReturn(response);
@@ -73,7 +79,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void testCreateCategory_returns400_whenAnyCategoryNameExceeds100Characters() {
+    void testCreateCategoryReturns400WhenAnyCategoryNameExceeds100Characters() {
         String tooLongName = "a".repeat(101);
 
         assertThat(mvc.post().uri("/api/categories")
@@ -87,7 +93,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void testCreateCategory_returns400_whenAnySubCategoryNameExceeds100Characters() {
+    void testCreateCategoryReturns400WhenAnySubCategoryNameExceeds100Characters() {
         String tooLongSubName = "b".repeat(101);
 
         assertThat(mvc.post().uri("/api/categories")
@@ -101,7 +107,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void testGetCategoryByName_returns400_whenNameExceeds100Characters() {
+    void testGetCategoryByNameReturns400WhenNameExceeds100Characters() {
         String tooLongName = "a".repeat(101);
 
         assertThat(mvc.get().uri("/api/categories/" + tooLongName))
@@ -111,7 +117,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void testUpdateCategory_returns400_whenCategoryNameExceeds100Characters() {
+    void testUpdateCategoryReturns400WhenCategoryNameExceeds100Characters() {
         String tooLongName = "a".repeat(101);
 
         assertThat(mvc.put().uri("/api/categories/" + tooLongName)
@@ -125,7 +131,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void testUpdateCategory_returns400_whenSubCategoryNameExceeds100Characters() {
+    void testUpdateCategoryReturns400WhenSubCategoryNameExceeds100Characters() {
         String tooLongSubName = "b".repeat(101);
 
         assertThat(mvc.put().uri("/api/categories/Electronics")
@@ -139,7 +145,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void testCreateCategory_returns201_withMultipleSubCategories() {
+    void testCreateCategoryReturns201WithMultipleSubCategories() {
         CategoryResponse response = new CategoryResponse(
             1L, "Electronics", Set.of("Phones", "Laptops", "Tablets"));
         when(categoryService.createCategory(any(CreateCategoryRequest.class)))
@@ -162,7 +168,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void updateCategory_returns200_withMultipleSubCategories() {
+    void updateCategoryReturns200WithMultipleSubCategories() {
         CategoryResponse response = new CategoryResponse(
             1L, "Electronics", Set.of("Phones", "Laptops"));
         when(categoryService.updateCategory(any(UpdateCategoryRequest.class), eq("Electronics")))
@@ -183,7 +189,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void testCreateCategory_returns400_whenNameIsBlank() {
+    void testCreateCategoryReturns400WhenNameIsBlank() {
         assertThat(mvc.post().uri("/api/categories")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -191,6 +197,107 @@ public class CategoryControllerTest {
                     """))
             .hasStatus(HttpStatus.BAD_REQUEST);
 
+        verifyNoInteractions(categoryService);
+    }
+
+    @Test
+    void testUpdateCategoryReturns200WhenUpdatedCategory() {
+        CategoryResponse response = new CategoryResponse(
+            1L, "Footwear", Set.of("Shoe", "Trainers", "Boots"));
+        when(categoryService.updateCategory(any(UpdateCategoryRequest.class), eq("footwear")))
+            .thenReturn(response);
+
+        MockMvcRequestBuilder result = mvc.put()
+                .uri("/api/categories/footwear")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "subCategories": ["Shoe", "Trainers", "Boots"]
+                        }
+                        """);
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().isLenientlyEqualTo("""
+            {"name": "Footwear", "subCategories": ["Shoe", "Trainers", "Boots"]}
+            """);
+    }
+
+    @Test
+    void testUpdateCategoryReturns409WhenNewSubCategorySetIsInUse() {
+        when(categoryService.updateCategory(any(UpdateCategoryRequest.class), eq("footwear")))
+            .thenThrow(new ResponseStatusException(
+                HttpStatus.CONFLICT, "Cannot replace sub categories in use."));
+
+        MockMvcRequestBuilder result = mvc.put()
+                .uri("/api/categories/footwear")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "subCategories": ["Trainers"]
+                        }
+                        """);
+
+        assertThat(result).hasStatus(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void testUpdateCategoryReturns404WhenNotFoundForUnknownCategory() {
+        when(categoryService.updateCategory(any(UpdateCategoryRequest.class), eq("unknown-category")))
+            .thenThrow(new EntityNotFoundException("Category not found: unknown-category"));
+
+        MockMvcRequestBuilder result = mvc.put()
+                .uri("/api/categories/unknown-category")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "subCategories": ["Shoe"]
+                        }
+                        """);
+
+        assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void testUpdateCategoryReturns400WhenRejectsMissingSubCategories() {
+        MockMvcRequestBuilder result = mvc.put()
+                .uri("/api/categories/footwear")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}");
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(categoryService);
+    }
+
+    @Test
+    void testUpdateCategoryReturns400WhenRejectsSubCategoryNameOver100Characters() {
+        String longSubCategoryName = "a".repeat(101);
+
+        MockMvcRequestBuilder result = mvc.put()
+                .uri("/api/categories/footwear")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "subCategories": ["%s"]
+                        }
+                        """.formatted(longSubCategoryName));
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(categoryService);
+    }
+
+    @Test
+    void testUpdateCategoryReturns400WhenRejectsUnknownJsonField() {
+        MockMvcRequestBuilder result = mvc.put()
+                .uri("/api/categories/footwear")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                        "subCategories": ["Shoe"],
+                        "unknownField": "value"
+                        }
+                        """);
+
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         verifyNoInteractions(categoryService);
     }
 }

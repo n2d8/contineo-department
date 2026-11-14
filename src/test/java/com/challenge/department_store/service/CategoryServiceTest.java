@@ -1,6 +1,7 @@
 // CategoryServiceTest.java
 package com.challenge.department_store.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,8 +13,10 @@ import com.challenge.department_store.dto.CategoryResponse;
 import com.challenge.department_store.dto.CreateCategoryRequest;
 import com.challenge.department_store.dto.UpdateCategoryRequest;
 import com.challenge.department_store.entity.Category;
+import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
 import com.challenge.department_store.repository.CategoryRepository;
+import com.challenge.department_store.repository.InventoryRepository;
 import com.challenge.department_store.repository.SubCategoryRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -25,6 +28,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +39,9 @@ class CategoryServiceTest {
 
     @Mock
     private SubCategoryRepository subCategoryRepository;
+
+    @Mock 
+    private InventoryRepository inventoryRepository;
 
     @InjectMocks
     private CategoryService categoryService;
@@ -151,10 +158,202 @@ class CategoryServiceTest {
             .isInstanceOf(EntityNotFoundException.class);
     }
 
+    @Test
+    void testUpdateCategoryRejectsRemovingSubCategoryUsedByInventory() {
+        Category category = createCategory("Footwear", "Shoe", "Trainers");
+        Inventory inventory = createInventory(category, "Shoe");
+
+        when(categoryRepository.findByNameIgnoreCase("Footwear"))
+                .thenReturn(Optional.of(category));
+        when(inventoryRepository.findByCategory(category))
+                .thenReturn(List.of(inventory));
+
+        UpdateCategoryRequest request =
+                new UpdateCategoryRequest(Set.of("Trainers"));
+
+        assertThatThrownBy(() ->
+                categoryService.updateCategory(request, "Footwear")
+        )
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Cannot replace sub categories in use");
+
+        verify(categoryRepository, org.mockito.Mockito.never()).save(any(Category.class));
+    }
+
+    @Test
+    void testUpdateCategoryAllowsRemovingSubCategoryNotUsedByInventory() {
+        Category category = createCategory("Footwear", "Shoe", "Trainers");
+        Inventory inventory = createInventory(category, "Shoe");
+
+        SubCategory shoe = new SubCategory("Shoe");
+
+        when(categoryRepository.findByNameIgnoreCase("Footwear"))
+                .thenReturn(Optional.of(category));
+        when(inventoryRepository.findByCategory(category))
+                .thenReturn(List.of(inventory));
+        when(subCategoryRepository.findByNameIgnoreCase("Shoe"))
+                .thenReturn(Optional.of(shoe));
+        when(categoryRepository.save(category))
+                .thenReturn(category);
+
+        UpdateCategoryRequest request =
+                new UpdateCategoryRequest(Set.of("Shoe"));
+
+        CategoryResponse response =
+                categoryService.updateCategory(request, "Footwear");
+
+        assertThat(response.name()).isEqualTo("Footwear");
+        assertThat(response.subCategories()).containsExactly("Shoe");
+
+        verify(categoryRepository).save(category);
+    }
+
+    @Test
+    void testUpdateCategoryRejectsRemovingOneOfMultipleInventorySubCategories() {
+        Category category = createCategory("Footwear", "Shoe", "Trainers");
+        Inventory inventory = createInventory(category, "Shoe", "Trainers");
+
+        when(categoryRepository.findByNameIgnoreCase("Footwear"))
+                .thenReturn(Optional.of(category));
+        when(inventoryRepository.findByCategory(category))
+                .thenReturn(List.of(inventory));
+
+        UpdateCategoryRequest request =
+                new UpdateCategoryRequest(Set.of("Shoe"));
+
+        assertThatThrownBy(() ->
+                categoryService.updateCategory(request, "Footwear")
+        )
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(categoryRepository, org.mockito.Mockito.never()).save(any(Category.class));
+    }
+
+    @Test
+    void testUpdateCategoryAllowsKeepingAllInventorySubCategories() {
+        Category category = createCategory("Footwear", "Shoe", "Trainers");
+
+        SubCategory shoe = new SubCategory("Shoe");
+        SubCategory trainers = new SubCategory("Trainers");
+
+        when(categoryRepository.findByNameIgnoreCase("Footwear"))
+                .thenReturn(Optional.of(category));
+        when(subCategoryRepository.findByNameIgnoreCase("Shoe"))
+                .thenReturn(Optional.of(shoe));
+        when(subCategoryRepository.findByNameIgnoreCase("Trainers"))
+                .thenReturn(Optional.of(trainers));
+        when(categoryRepository.save(category))
+                .thenReturn(category);
+
+        UpdateCategoryRequest request =
+                new UpdateCategoryRequest(Set.of("Shoe", "Trainers"));
+
+        CategoryResponse response =
+                categoryService.updateCategory(request, "Footwear");
+
+        assertThat(response.subCategories())
+                .containsExactlyInAnyOrder("Shoe", "Trainers");
+
+        verify(categoryRepository).save(category);
+    }
+
+    @Test
+    void testUpdateCategoryAllowsAddingSubCategoryWithoutRemovingUsedSubCategory() {
+        Category category = createCategory("Footwear", "Shoe");
+
+        SubCategory shoe = new SubCategory("Shoe");
+        SubCategory trainers = new SubCategory("Trainers");
+
+        when(categoryRepository.findByNameIgnoreCase("Footwear"))
+                .thenReturn(Optional.of(category));
+        when(subCategoryRepository.findByNameIgnoreCase("Shoe"))
+                .thenReturn(Optional.of(shoe));
+        when(subCategoryRepository.findByNameIgnoreCase("Trainers"))
+                .thenReturn(Optional.of(trainers));
+        when(categoryRepository.save(category))
+                .thenReturn(category);
+
+        UpdateCategoryRequest request =
+                new UpdateCategoryRequest(Set.of("Shoe", "Trainers"));
+
+        CategoryResponse response =
+                categoryService.updateCategory(request, "Footwear");
+
+        assertThat(response.subCategories())
+                .containsExactlyInAnyOrder("Shoe", "Trainers");
+
+        verify(categoryRepository).save(category);
+    }
+
+    @Test
+    void testUpdateCategoryThrowsWhenCategoryDoesNotExist() {
+        when(categoryRepository.findByNameIgnoreCase("Unknown"))
+                .thenReturn(Optional.empty());
+
+        UpdateCategoryRequest request =
+                new UpdateCategoryRequest(Set.of("Shoe"));
+
+        assertThatThrownBy(() ->
+                categoryService.updateCategory(request, "Unknown")
+        )
+                .isInstanceOf(jakarta.persistence.EntityNotFoundException.class)
+                .hasMessageContaining("Category not found: Unknown");
+
+        verify(categoryRepository, org.mockito.Mockito.never()).save(any(Category.class));
+    }
+
+    @Test
+    void testUpdateCategoryDoesNotSaveWhenUpdateIsRejected() {
+        Category category = createCategory("Footwear", "Shoe", "Trainers");
+        Inventory inventory = createInventory(category, "Shoe");
+
+        when(categoryRepository.findByNameIgnoreCase("Footwear"))
+                .thenReturn(Optional.of(category));
+        when(inventoryRepository.findByCategory(category))
+                .thenReturn(List.of(inventory));
+
+        UpdateCategoryRequest request =
+                new UpdateCategoryRequest(Set.of("Trainers"));
+
+        assertThatThrownBy(() ->
+                categoryService.updateCategory(request, "Footwear")
+        )
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(categoryRepository, org.mockito.Mockito.never()).save(any(Category.class));
+    }
+
     private Category categoryWithSubCategories() {
         Category footwear = new Category("Footwear");
         footwear.addSubCategory(new SubCategory("Sneakers"));
         footwear.addSubCategory(new SubCategory("Cleats"));
         return footwear;
+    }
+
+        private Category createCategory(String name, String... subCategoryNames) {
+    Category category = new Category(name);
+
+    for (String subCategoryName : subCategoryNames) {
+        category.addSubCategory(new SubCategory(subCategoryName));
+    }
+
+    return category;
+    }
+
+    private Inventory createInventory(Category category, String... subCategoryNames) {
+        Set<SubCategory> subCategories = new java.util.HashSet<>();
+
+        for (String subCategoryName : subCategoryNames) {
+            subCategories.add(new SubCategory(subCategoryName));
+        }
+
+        return new Inventory(
+                "Air Jordan 1",
+                "Jordan",
+                category,
+                10,
+                "High-top basketball shoe",
+                subCategories
+        );
     }
 }
