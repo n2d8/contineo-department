@@ -51,6 +51,7 @@ public class CategoryController {
     @PutMapping("/{name}")
     public CategoryResponse updateCategory(@Valid @RequestBody UpdateCategoryRequest request, 
                                         @PathVariable @Size(max = 100) String name) {
+        //TODO: Create a global exception handler and specific service exceptions.
         try {
             return categoryService.updateCategory(request, name);
         } catch (IllegalStateException exception) {
