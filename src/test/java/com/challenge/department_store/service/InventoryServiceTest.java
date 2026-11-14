@@ -102,7 +102,6 @@ public class InventoryServiceTest {
         );
 
         shoeSubCategory = new SubCategory(SHOE_SUBCATEGORY_NAME);
-        trainersSubCategory = new SubCategory(TRAINERS_SUBCATEGORY_NAME);
 
         existingInventory = createInventory(
                 INVENTORY_NAME,
