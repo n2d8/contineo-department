@@ -8,12 +8,12 @@ import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
 
 public record InventoryResponse(Long id, 
-                                String inventoryName,
+                                String name,
                                 String shopName, 
                                 Category category, 
                                 Set<String> subCategories, 
                                 Integer quantity, 
-                                String descrption) {
+                                String description) {
 
     public static InventoryResponse from(Inventory inventory) {
         return new InventoryResponse(inventory.getId(),

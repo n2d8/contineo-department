@@ -329,7 +329,7 @@ class CategoryServiceTest {
         return footwear;
     }
 
-        private Category createCategory(String name, String... subCategoryNames) {
+    private Category createCategory(String name, String... subCategoryNames) {
     Category category = new Category(name);
 
     for (String subCategoryName : subCategoryNames) {

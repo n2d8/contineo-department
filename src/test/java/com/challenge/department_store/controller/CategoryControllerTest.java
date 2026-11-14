@@ -168,7 +168,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void updateCategoryReturns200WithMultipleSubCategories() {
+    void testUpdateCategoryReturns200WithMultipleSubCategories() {
         CategoryResponse response = new CategoryResponse(
             1L, "Electronics", Set.of("Phones", "Laptops"));
         when(categoryService.updateCategory(any(UpdateCategoryRequest.class), eq("Electronics")))
