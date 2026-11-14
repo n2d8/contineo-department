@@ -2,6 +2,7 @@ package com.challenge.department_store.controller;
 
 import java.util.List;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,13 +40,29 @@ public class CategoryController {
 
     @GetMapping("/{name}")
     public CategoryResponse getCategoryByName(@PathVariable @Size(max = 100) String name) {
-        return categoryService.getCategoryByName(name);
+        try {
+            return categoryService.getCategoryByName(name);
+        } catch (EntityNotFoundException exception) {
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                exception
+            );
+        }
     }
 
     @PostMapping 
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponse createCategory(@Valid @RequestBody CreateCategoryRequest request) {
-        return categoryService.createCategory(request);
+        try {
+            return categoryService.createCategory(request);
+        } catch (DuplicateKeyException exception) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                exception
+            );
+        }
     }
 
     @PutMapping("/{name}")
