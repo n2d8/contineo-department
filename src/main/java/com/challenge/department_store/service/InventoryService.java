@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.challenge.department_store.dto.CreateInventoryRequest;
 import com.challenge.department_store.dto.InventoryResponse;
@@ -37,15 +38,18 @@ public class InventoryService {
         this.subCategoryRepository = subCategoryRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<InventoryResponse> getAllInventories() {
         return inventoryRepository.findAll().stream().map(InventoryResponse::from).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public InventoryResponse getInventoryById(Long id) {
         Inventory inventory = getInventory(id);
         return InventoryResponse.from(inventory);
     }
 
+    @Transactional
     public InventoryResponse createInventory(CreateInventoryRequest request) {
         Category category = getCategory(request.category());
         Set<SubCategory> subCategories = validateCategoryAndSubCategory(category, request.subCategories());
@@ -66,6 +70,7 @@ public class InventoryService {
         return InventoryResponse.from(inventoryRepository.save(inventory));
     }
 
+    @Transactional
     public InventoryResponse updateInventory(Long id, UpdateInventoryRequest request) {
         Inventory inventory = getInventory(id);
         inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(request.name(), request.shopName())
@@ -86,6 +91,7 @@ public class InventoryService {
         return InventoryResponse.from(inventoryRepository.save(inventory));
     }
 
+    @Transactional
     public InventoryResponse updateInventoryQuantity(Long id, UpdateInventoryQuantityRequest request) {
         if (request.quantity() < 0) {
             //TODO: Replace IllegalArgumentException with dedicated business logic Exception instead

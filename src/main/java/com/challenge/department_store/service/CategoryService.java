@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.challenge.department_store.dto.CategoryResponse;
 import com.challenge.department_store.dto.CreateCategoryRequest;
@@ -32,6 +33,7 @@ public class CategoryService {
         this.inventoryRepository = inventoryRepository;
     }
 
+    @Transactional
     public CategoryResponse createCategory(CreateCategoryRequest request) {
         categoryRepository.findByNameIgnoreCase(request.name()).ifPresent(foundCategory -> {
             //TODO: Replace DuplicateKeyException as its database level and use a dedicated business level Exception instead
@@ -44,6 +46,7 @@ public class CategoryService {
         return CategoryResponse.from(categoryRepository.save(newCategory));
     }
 
+    @Transactional
     public CategoryResponse updateCategory(UpdateCategoryRequest request, String categoryName) {
         Category category = categoryRepository.findByNameIgnoreCase(categoryName).orElseThrow(
             //TODO: Replace EntityNotFoundException with dedicated business logic Exception instead
@@ -59,10 +62,12 @@ public class CategoryService {
         return CategoryResponse.from(categoryRepository.save(category));
     }
 
+    @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream().map(CategoryResponse::from).toList();
     }
 
+    @Transactional(readOnly = true)
     public CategoryResponse getCategoryByName(String categoryName) {
         Category category = categoryRepository.findByNameIgnoreCase(categoryName).orElseThrow(
             //TODO: Replace NameNotFoundException with dedicated business logic Exception instead
