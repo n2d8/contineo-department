@@ -22,7 +22,6 @@ import org.springframework.dao.DuplicateKeyException;
 import com.challenge.department_store.dto.CreateInventoryRequest;
 import com.challenge.department_store.dto.InventoryResponse;
 import com.challenge.department_store.dto.UpdateInventoryQuantityRequest;
-import com.challenge.department_store.dto.UpdateInventoryRequest;
 import com.challenge.department_store.entity.Category;
 import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
@@ -54,7 +53,6 @@ public class InventoryServiceTest {
 
     private Category footwearCategory;
     private SubCategory shoeSubCategory;
-    private SubCategory trainersSubCategory;
     private Inventory existingInventory;
 
     private Category createCategory(String name, String... subCategoryNames) {
