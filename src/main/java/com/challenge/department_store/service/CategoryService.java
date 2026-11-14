@@ -46,7 +46,7 @@ public class CategoryService {
 
     public CategoryResponse updateCategory(UpdateCategoryRequest request, String categoryName) {
         Category category = categoryRepository.findByNameIgnoreCase(categoryName).orElseThrow(
-            //TODO: Replace NameNotFoundException with dedicated business logic Exception instead
+            //TODO: Replace EntityNotFoundException with dedicated business logic Exception instead
             () -> new EntityNotFoundException( "Category not found: " + categoryName)
         );
         if (!isSubCategoryUpdateValid(category, request.getSubCategories())) {
