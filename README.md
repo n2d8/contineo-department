@@ -40,6 +40,7 @@ The following contains the assumptions and requirements to implement the service
 14. Inventory name is not unique, so different users can create an inventory for their specific product even if they have the same product name, however the combination of the inventory name and the shop name must be unique ignoring case.
 15. Secure the API calls with JWK and JWT pair as bonus.
 16. Category names are unique and the uniquness is case insensitive, so footwear and FOOTWEAR results the same category.
+17. Instead of using pre-defined enums for categories and sub-categories, we allow free input of these values so we don't limit on the categorization of the inventory and can extend to future potential inventory products.
 
 # API Design
 
