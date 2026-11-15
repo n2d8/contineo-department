@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,11 +13,12 @@ import com.challenge.department_store.dto.UpdateCategoryRequest;
 import com.challenge.department_store.entity.Category;
 import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
+import com.challenge.department_store.exception.DuplicateEntityException;
+import com.challenge.department_store.exception.IllegalOperationException;
+import com.challenge.department_store.exception.NotFoundException;
 import com.challenge.department_store.repository.CategoryRepository;
 import com.challenge.department_store.repository.InventoryRepository;
 import com.challenge.department_store.repository.SubCategoryRepository;
-
-import jakarta.persistence.EntityNotFoundException;
 
 @Service 
 public class CategoryService {
@@ -36,8 +36,7 @@ public class CategoryService {
     @Transactional
     public CategoryResponse createCategory(CreateCategoryRequest request) {
         categoryRepository.findByNameIgnoreCase(request.name()).ifPresent(foundCategory -> {
-            //TODO: Replace DuplicateKeyException as its database level and use a dedicated business level Exception instead
-            throw new DuplicateKeyException("Duplicate case-insensitive category name: " + request.name() + " and " + foundCategory.getName());
+            throw new DuplicateEntityException("Category already exists: " + foundCategory.getName());
         });
 
         Category newCategory = new Category(request.name());
@@ -49,12 +48,10 @@ public class CategoryService {
     @Transactional
     public CategoryResponse updateCategory(UpdateCategoryRequest request, String categoryName) {
         Category category = categoryRepository.findByNameIgnoreCase(categoryName).orElseThrow(
-            //TODO: Replace EntityNotFoundException with dedicated business logic Exception instead
-            () -> new EntityNotFoundException( "Category not found: " + categoryName)
+            () -> new NotFoundException( "Category not found: " + categoryName)
         );
         if (!isSubCategoryUpdateValid(category, request.getSubCategories())) {
-            //TODO: Replace IllegalStateException with dedicated business logic Exception instead
-            throw new IllegalStateException("Cannot replace sub categories in use.");
+            throw new IllegalOperationException("Cannot replace sub categories in use.");
         }
         category.getSubCategories().clear();
         addSubCategoryFromNames(category, request.getSubCategories());
@@ -70,8 +67,7 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public CategoryResponse getCategoryByName(String categoryName) {
         Category category = categoryRepository.findByNameIgnoreCase(categoryName).orElseThrow(
-            //TODO: Replace NameNotFoundException with dedicated business logic Exception instead
-            () -> new EntityNotFoundException( "Category not found: " + categoryName)
+            () -> new NotFoundException( "Category not found: " + categoryName)
         );
         return CategoryResponse.from(category);
     }

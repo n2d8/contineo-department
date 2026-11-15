@@ -5,7 +5,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,11 +15,12 @@ import com.challenge.department_store.dto.UpdateInventoryRequest;
 import com.challenge.department_store.entity.Category;
 import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
+import com.challenge.department_store.exception.DuplicateEntityException;
+import com.challenge.department_store.exception.IllegalOperationException;
+import com.challenge.department_store.exception.NotFoundException;
 import com.challenge.department_store.repository.CategoryRepository;
 import com.challenge.department_store.repository.InventoryRepository;
 import com.challenge.department_store.repository.SubCategoryRepository;
-
-import jakarta.persistence.EntityNotFoundException;
 
 @Service 
 public class InventoryService {
@@ -54,10 +54,7 @@ public class InventoryService {
         Category category = getCategory(request.category());
         Set<SubCategory> subCategories = validateCategoryAndSubCategory(category, request.subCategories());
 
-        inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(request.name(), request.shopName())
-            .ifPresent(foundInventory -> {
-                throw new DuplicateKeyException("Inventory name and shop name pair already exists.");
-            });
+        ifInventoryExists(request.name(), request.shopName());
         
         Inventory inventory = new Inventory(request.name(), 
                                             request.shopName(), 
@@ -77,10 +74,7 @@ public class InventoryService {
         if (!(inventory.getName().equalsIgnoreCase(request.name()) && 
                 inventory.getShopName().equalsIgnoreCase(request.shopName()))) {
             
-            inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(request.name(), request.shopName())
-                .ifPresent(foundInventory -> {
-                    throw new DuplicateKeyException("Inventory name and shop name pair already exists.");
-                });
+            ifInventoryExists(request.name(), request.shopName());
         }
 
         Category category = getCategory(request.category());
@@ -99,8 +93,7 @@ public class InventoryService {
     @Transactional
     public InventoryResponse updateInventoryQuantity(Long id, UpdateInventoryQuantityRequest request) {
         if (request.quantity() < 0) {
-            //TODO: Replace IllegalArgumentException with dedicated business logic Exception instead
-            throw new IllegalArgumentException("Quantity must not be negative.");
+            throw new IllegalOperationException("Quantity must not be negative.");
         }
         Inventory inventory = getInventoryForUpdate(id);
         inventory.setQuantity(request.quantity());
@@ -109,8 +102,7 @@ public class InventoryService {
 
     private SubCategory findSubCategoryOrElseThrow(String subCategoryName) {
         return subCategoryRepository.findByNameIgnoreCase(subCategoryName).orElseThrow(
-            //TODO: Replace EntityNotFoundException with dedicated business logic Exception instead
-            () -> new EntityNotFoundException("Sub category does not exist.")
+            () -> new NotFoundException("Sub-category does not exist.")
         );
     }    
     private Set<SubCategory> validateCategoryAndSubCategory(Category category, Set<String> subCategories) {
@@ -129,11 +121,11 @@ public class InventoryService {
             if (invalidSubCategory != null) {
                 subCategoryRepository.findByNameIgnoreCase(invalidSubCategory).ifPresent(
                     foundCategory -> {
-                        throw new IllegalStateException("Sub categories is not compatible with category.");
+                        throw new IllegalOperationException("Sub-categories are not compatible with category.");
                     }
                 );
             }
-            throw new EntityNotFoundException("Some of the sub categories does not exist.");
+            throw new NotFoundException("Some of the sub-categories does not exist.");
         }
 
         return subCategories.stream().map(this::findSubCategoryOrElseThrow).collect(Collectors.toSet());
@@ -145,22 +137,28 @@ public class InventoryService {
 
     private Inventory getInventory(Long id) {
         return inventoryRepository.findById(id).orElseThrow(
-            //TODO: Replace EntityNotFoundException with dedicated business logic Exception instead
-            () -> new EntityNotFoundException( "Inventory not found: " + id)
+            () -> new NotFoundException( "Inventory not found: " + id)
         );
     }
 
     private Inventory getInventoryForUpdate(Long id) {
         return inventoryRepository.findByIdForUpdate(id).orElseThrow(
-            //TODO: Replace EntityNotFoundException with dedicated business logic Exception instead
-            () -> new EntityNotFoundException("Inventory not found: " + id)
+            () -> new NotFoundException("Inventory not found: " + id)
         );
+    }
+
+    private void ifInventoryExists(String categoryName, String shopName) {
+        inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(categoryName, shopName)
+            .ifPresent(foundInventory -> {
+                throw new DuplicateEntityException(
+                    "Inventory already exists: " + foundInventory.getName() + " - " + foundInventory.getShopName()
+                );
+            });
     }
 
     private Category getCategory(String categoryName) {
         return categoryRepository.findByNameIgnoreCase(categoryName).orElseThrow(
-            //TODO: Replace EntityNotFoundException with dedicated business logic Exception instead
-            () -> new EntityNotFoundException("Category does not exist.")
+            () -> new NotFoundException("Category does not exist: " + categoryName)
         );
     }
 }
