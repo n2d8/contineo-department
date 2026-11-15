@@ -3,14 +3,13 @@ package com.challenge.department_store.dto;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.challenge.department_store.entity.Category;
 import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
 
 public record InventoryResponse(Long id, 
                                 String name,
                                 String shopName, 
-                                Category category, 
+                                String categoryName, 
                                 Set<String> subCategories, 
                                 Integer quantity, 
                                 String description) {
@@ -19,7 +18,7 @@ public record InventoryResponse(Long id,
         return new InventoryResponse(inventory.getId(),
                                      inventory.getName(), 
                                      inventory.getShopName(), 
-                                     inventory.getCategory(), 
+                                     inventory.getCategory().getName(), 
                                      inventory.getSubCategories()
                                               .stream()
                                               .map(SubCategory::getName)

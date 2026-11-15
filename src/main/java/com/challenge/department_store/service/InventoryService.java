@@ -73,11 +73,16 @@ public class InventoryService {
     @Transactional
     public InventoryResponse updateInventory(Long id, UpdateInventoryRequest request) {
         Inventory inventory = getInventory(id);
-        inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(request.name(), request.shopName())
-            .ifPresent(foundInventory -> {
-                throw new DuplicateKeyException("Inventory name and shop name pair already exists.");
-            });
         
+        if (!(inventory.getName().equalsIgnoreCase(request.name()) && 
+                inventory.getShopName().equalsIgnoreCase(request.shopName()))) {
+            
+            inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(request.name(), request.shopName())
+                .ifPresent(foundInventory -> {
+                    throw new DuplicateKeyException("Inventory name and shop name pair already exists.");
+                });
+        }
+
         Category category = getCategory(request.category());
         Set<SubCategory> subCategories = validateCategoryAndSubCategory(category, request.subCategories());
 
@@ -111,15 +116,24 @@ public class InventoryService {
     private Set<SubCategory> validateCategoryAndSubCategory(Category category, Set<String> subCategories) {
         boolean isValid = true;
         Set<String> supportedSubCat = category.getSubCategories().stream().map(this::toCaseIncensitiveName).collect(Collectors.toSet());
+        String invalidSubCategory = null;
         for (String subName: subCategories) {
             // Align case insensitive behavior as respository queries
             if (!supportedSubCat.contains(subName.toUpperCase(Locale.ROOT))) {
                 isValid = false;
+                invalidSubCategory = subName;
                 break;
             }
         }
         if (!isValid) {
-            throw new IllegalStateException("Sub categories is not compatible with category.");
+            if (invalidSubCategory != null) {
+                subCategoryRepository.findByNameIgnoreCase(invalidSubCategory).ifPresent(
+                    foundCategory -> {
+                        throw new IllegalStateException("Sub categories is not compatible with category.");
+                    }
+                );
+            }
+            throw new EntityNotFoundException("Some of the sub categories does not exist.");
         }
 
         return subCategories.stream().map(this::findSubCategoryOrElseThrow).collect(Collectors.toSet());

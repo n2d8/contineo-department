@@ -145,13 +145,34 @@ class InventoryControllerTest {
 
     @Test
     void testCreateInventoryReturns404WhenSubCategoryDoesNotExist() {
-        when(inventoryService.createInventory(any(CreateInventoryRequest.class)))
-            .thenThrow(new EntityNotFoundException("Sub category does not exist."));
+        CreateInventoryRequest request = new CreateInventoryRequest(
+            "Air Jordan 1",
+            "Jordan",
+            "Footwear",
+            Set.of("Unknown"),
+            10,
+            "Basketball shoe"
+        );
+        when(inventoryService.createInventory(request))
+            .thenThrow(new EntityNotFoundException(
+                "Some of the sub categories does not exist."
+            ));
 
         assertThat(mvc.post().uri("/api/inventories")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(validInventoryRequest()))
+                .content("""
+                    {
+                      "name": "Air Jordan 1",
+                      "shopName": "Jordan",
+                      "category": "Footwear",
+                      "subCategories": ["Unknown"],
+                      "quantity": 10,
+                      "description": "Basketball shoe"
+                    }
+                    """))
             .hasStatus(HttpStatus.NOT_FOUND);
+
+        verify(inventoryService).createInventory(request);
     }
 
     @Test
@@ -305,17 +326,34 @@ class InventoryControllerTest {
 
     @Test
     void testUpdateInventoryReturns409WhenInventoryNameAndShopNameAlreadyExist() {
-        when(inventoryService.updateInventory(
-                eq(1L),
-                any(UpdateInventoryRequest.class)))
+        UpdateInventoryRequest request = new UpdateInventoryRequest(
+            "Nike Pegasus",
+            "Nike",
+            "Footwear",
+            Set.of("Shoe"),
+            10,
+            "Running shoe"
+        );
+        when(inventoryService.updateInventory(eq(1L), eq(request)))
             .thenThrow(new DuplicateKeyException(
                 "Inventory name and shop name pair already exists."
             ));
 
         assertThat(mvc.put().uri("/api/inventories/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(validUpdateRequest()))
+                .content("""
+                    {
+                      "name": "Nike Pegasus",
+                      "shopName": "Nike",
+                      "category": "Footwear",
+                      "subCategories": ["Shoe"],
+                      "quantity": 10,
+                      "description": "Running shoe"
+                    }
+                    """))
             .hasStatus(HttpStatus.CONFLICT);
+
+        verify(inventoryService).updateInventory(1L, request);
     }
 
     @Test
@@ -430,7 +468,7 @@ class InventoryControllerTest {
             id,
             name,
             shopName,
-            new Category(categoryName),
+            new Category(categoryName).getName(),
             subCategories,
             quantity,
             "Inventory description"

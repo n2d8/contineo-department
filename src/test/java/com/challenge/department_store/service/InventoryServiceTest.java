@@ -22,12 +22,15 @@ import org.springframework.dao.DuplicateKeyException;
 import com.challenge.department_store.dto.CreateInventoryRequest;
 import com.challenge.department_store.dto.InventoryResponse;
 import com.challenge.department_store.dto.UpdateInventoryQuantityRequest;
+import com.challenge.department_store.dto.UpdateInventoryRequest;
 import com.challenge.department_store.entity.Category;
 import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
 import com.challenge.department_store.repository.CategoryRepository;
 import com.challenge.department_store.repository.InventoryRepository;
 import com.challenge.department_store.repository.SubCategoryRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 public class InventoryServiceTest {
@@ -149,7 +152,7 @@ public class InventoryServiceTest {
 
         assertThat(response.name()).isEqualTo(INVENTORY_NAME);
         assertThat(response.shopName()).isEqualTo(SHOP_NAME);
-        assertThat(response.category().getName()).isEqualTo(CATEGORY_NAME);
+        assertThat(response.categoryName()).isEqualTo(CATEGORY_NAME);
         assertThat(response.quantity()).isEqualTo(10);
         assertThat(response.description()).isEqualTo("High-top basketball shoe");
         assertThat(response.subCategories()).containsExactly(SHOE_SUBCATEGORY_NAME);
@@ -295,12 +298,37 @@ public class InventoryServiceTest {
         );
 
         stubExistingCategory();
+        stubExistingSubCategories("Boots");
 
         assertThatThrownBy(() -> inventoryService.createInventory(request))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Sub categories is not compatible with category.");
 
         verify(subCategoryRepository, never()).save(any(SubCategory.class));
+        verify(inventoryRepository, never()).save(any(Inventory.class));
+    }
+
+    @Test
+    void testCreateInventoryThrowsEntityNotFoundWhenSubCategoryDoesNotExist() {
+        String missingSubCategory = "Unknown";
+        CreateInventoryRequest request = new CreateInventoryRequest(
+                INVENTORY_NAME,
+                SHOP_NAME,
+                CATEGORY_NAME,
+                Set.of(missingSubCategory),
+                10,
+                "High-top basketball shoe"
+        );
+
+        stubExistingCategory();
+        when(subCategoryRepository.findByNameIgnoreCase(missingSubCategory))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> inventoryService.createInventory(request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Some of the sub categories does not exist.");
+
+        verify(subCategoryRepository).findByNameIgnoreCase(missingSubCategory);
         verify(inventoryRepository, never()).save(any(Inventory.class));
     }
 
@@ -388,6 +416,46 @@ public class InventoryServiceTest {
         assertThat(response.name()).isEqualTo(differentInventoryName);
 
         verify(inventoryRepository).save(any(Inventory.class));
+    }
+
+    @Test
+    void testUpdateInventoryThrowsDuplicateKeyWhenNameAndShopPairBelongsToAnotherInventory() {
+        String conflictingName = "Nike Pegasus";
+        String conflictingShopName = "Nike";
+        UpdateInventoryRequest request = new UpdateInventoryRequest(
+                conflictingName,
+                conflictingShopName,
+                CATEGORY_NAME,
+                Set.of(SHOE_SUBCATEGORY_NAME),
+                10,
+                "Running shoe"
+        );
+        Inventory otherInventory = createInventory(
+                conflictingName,
+                conflictingShopName,
+                footwearCategory,
+                5,
+                "Existing running shoe",
+                SHOE_SUBCATEGORY_NAME
+        );
+
+        when(inventoryRepository.findById(INVENTORY_ID))
+                .thenReturn(Optional.of(existingInventory));
+        when(inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(
+                conflictingName,
+                conflictingShopName
+        ))
+                .thenReturn(Optional.of(otherInventory));
+
+        assertThatThrownBy(() -> inventoryService.updateInventory(INVENTORY_ID, request))
+                .isInstanceOf(DuplicateKeyException.class)
+                .hasMessageContaining("Inventory name and shop name pair already exists.");
+
+        verify(inventoryRepository).findByNameIgnoreCaseAndShopNameIgnoreCase(
+                conflictingName,
+                conflictingShopName
+        );
+        verify(inventoryRepository, never()).save(any(Inventory.class));
     }
 
     @Test
@@ -501,7 +569,7 @@ public class InventoryServiceTest {
 
         assertThat(response.name()).isEqualTo(INVENTORY_NAME);
         assertThat(response.shopName()).isEqualTo(SHOP_NAME);
-        assertThat(response.category().getName()).isEqualTo(CATEGORY_NAME);
+        assertThat(response.categoryName()).isEqualTo(CATEGORY_NAME);
     }
 
     @Test
