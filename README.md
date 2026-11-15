@@ -129,14 +129,14 @@ Custom exception classes were created to distinguish different types of errors a
 The following Exceptions that were created for the service:
 - DuplicateEntityException: When the requests require creation of a resource but that requested resource already exists.
 - IllegalOperationException: When the requests itself contains issues leading to the service cannot be fulfilled.
-- - NotFoundException: When a request requires a resource that is expected to exist but cannot be found when the request is received.
+- NotFoundException: When a request requires a resource that is expected to exist but cannot be found when the request is received.
 
 The following shows the mapping of Exceptions and the HTTP error status codes:
 |Exception|HTTP Status|Response Error|Example|
 |---|---|---|---|
 |DuplicateEntityException|409 Conflict|Conflict|Category already exists: SomeExistingCategory|
 |IllegalOperationException|400 Bad Request|Bad Request|Cannot replace sub-categories in use.|
-|NotFoundException|404 Not Found|NotFound|Category not found: SomeUnknownCategory|
+|NotFoundException|404 Not Found|Not Found|Category not found: SomeUnknownCategory|
 |MethodArgumentNotValidException|400 Bad Request|Bad Request|name: must not be blank|
 |HttpMessageNotReadableException|400 Bad Request|Bad Request|Malformed or invalid request body|
 |MethodArgumentTypeMismatchException|400 Bad Request|Bad Request|Invalid value for path parameter: id|
@@ -153,7 +153,7 @@ When the application is running, OpenAPI documentation is available at:
 
 # JWT Authentication
 
-JWT authentication is an optional bonus feature. It is disabled by default and is enabled only when the `JWT_AUTH_ENABLED` environment variable is set to `true`. Use the environment variable to set a JWKs file from the local file system, set the expected audience and issuer then enable the authentication. Once enabled, the security filter chain will apply the access policy requiring authentication for every request.
+JWT authentication is an optional bonus feature. It is disabled by default and is enabled only when the `JWT_AUTH_ENABLED` environment variable is set to `true`. Use the environment variable to set a JWKS file from the local file system, set the expected audience and issuer, then enable authentication. Once enabled, the security filter chain requires authentication for inventory and category API routes.
 
 Configure these environment variables to enable authentication:
 
