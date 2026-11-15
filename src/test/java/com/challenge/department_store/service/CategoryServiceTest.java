@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DuplicateKeyException;
 
 import com.challenge.department_store.dto.CategoryResponse;
 import com.challenge.department_store.dto.CreateCategoryRequest;
@@ -14,11 +13,12 @@ import com.challenge.department_store.dto.UpdateCategoryRequest;
 import com.challenge.department_store.entity.Category;
 import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
+import com.challenge.department_store.exception.DuplicateEntityException;
+import com.challenge.department_store.exception.IllegalOperationException;
+import com.challenge.department_store.exception.NotFoundException;
 import com.challenge.department_store.repository.CategoryRepository;
 import com.challenge.department_store.repository.InventoryRepository;
 import com.challenge.department_store.repository.SubCategoryRepository;
-
-import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -87,7 +87,7 @@ class CategoryServiceTest {
 
         assertThatThrownBy(() ->
             categoryService.createCategory(new CreateCategoryRequest("FOOTWEAR", Set.of())))
-            .isInstanceOf(DuplicateKeyException.class);
+            .isInstanceOf(DuplicateEntityException.class);
     }
 
     @Test 
@@ -126,7 +126,7 @@ class CategoryServiceTest {
 
         assertThatThrownBy(() ->
             categoryService.updateCategory(new UpdateCategoryRequest(Set.of("Cleats")), "WrongCatName"))
-            .isInstanceOf(EntityNotFoundException.class);
+            .isInstanceOf(NotFoundException.class);
     }
 
     @Test 
@@ -154,7 +154,7 @@ class CategoryServiceTest {
             .thenReturn(Optional.empty());
         assertThatThrownBy(() ->
             categoryService.getCategoryByName("WrongCatName"))
-            .isInstanceOf(EntityNotFoundException.class);
+            .isInstanceOf(NotFoundException.class);
     }
 
     @Test
@@ -173,7 +173,7 @@ class CategoryServiceTest {
         assertThatThrownBy(() ->
                 categoryService.updateCategory(request, "Footwear")
         )
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(IllegalOperationException.class)
                 .hasMessageContaining("Cannot replace sub categories in use");
 
         verify(categoryRepository, org.mockito.Mockito.never()).save(any(Category.class));
@@ -223,7 +223,7 @@ class CategoryServiceTest {
         assertThatThrownBy(() ->
                 categoryService.updateCategory(request, "Footwear")
         )
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalOperationException.class);
 
         verify(categoryRepository, org.mockito.Mockito.never()).save(any(Category.class));
     }
@@ -295,7 +295,7 @@ class CategoryServiceTest {
         assertThatThrownBy(() ->
                 categoryService.updateCategory(request, "Unknown")
         )
-                .isInstanceOf(jakarta.persistence.EntityNotFoundException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Category not found: Unknown");
 
         verify(categoryRepository, org.mockito.Mockito.never()).save(any(Category.class));
@@ -317,7 +317,7 @@ class CategoryServiceTest {
         assertThatThrownBy(() ->
                 categoryService.updateCategory(request, "Footwear")
         )
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalOperationException.class);
 
         verify(categoryRepository, org.mockito.Mockito.never()).save(any(Category.class));
     }

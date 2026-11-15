@@ -13,25 +13,28 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 import com.challenge.department_store.dto.CreateInventoryRequest;
 import com.challenge.department_store.dto.InventoryResponse;
 import com.challenge.department_store.dto.UpdateInventoryQuantityRequest;
 import com.challenge.department_store.dto.UpdateInventoryRequest;
 import com.challenge.department_store.entity.Category;
+import com.challenge.department_store.exception.DuplicateEntityException;
+import com.challenge.department_store.exception.GlobalExceptionHandler;
+import com.challenge.department_store.exception.IllegalOperationException;
+import com.challenge.department_store.exception.NotFoundException;
 import com.challenge.department_store.service.InventoryService;
-
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 @WebMvcTest(
     value = InventoryController.class,
     properties = "spring.jackson.deserialization.fail-on-unknown-properties=true"
 )
+@Import(GlobalExceptionHandler.class)
 class InventoryControllerTest {
 
     @Autowired
@@ -76,7 +79,7 @@ class InventoryControllerTest {
     @Test
     void testGetInventoryByIdReturns404WhenNotFound() {
         when(inventoryService.getInventoryById(999L))
-            .thenThrow(new EntityNotFoundException("Inventory not found: 999"));
+            .thenThrow(new NotFoundException("Inventory not found: 999"));
 
         assertThat(mvc.get().uri("/api/inventories/999"))
             .hasStatus(HttpStatus.NOT_FOUND);
@@ -124,7 +127,7 @@ class InventoryControllerTest {
     @Test
     void testCreateInventoryReturns409WhenInventoryAlreadyExists() {
         when(inventoryService.createInventory(any(CreateInventoryRequest.class)))
-            .thenThrow(new DuplicateKeyException("Inventory name and shop name pair already exists."));
+            .thenThrow(new DuplicateEntityException("Inventory already exists: Air Jordan 1 - Jordan"));
 
         assertThat(mvc.post().uri("/api/inventories")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -135,7 +138,7 @@ class InventoryControllerTest {
     @Test
     void testCreateInventoryReturns404WhenCategoryDoesNotExist() {
         when(inventoryService.createInventory(any(CreateInventoryRequest.class)))
-            .thenThrow(new EntityNotFoundException("Category does not exist."));
+            .thenThrow(new NotFoundException("Category does not exist: Footwear"));
 
         assertThat(mvc.post().uri("/api/inventories")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -154,8 +157,8 @@ class InventoryControllerTest {
             "Basketball shoe"
         );
         when(inventoryService.createInventory(request))
-            .thenThrow(new EntityNotFoundException(
-                "Some of the sub categories does not exist."
+            .thenThrow(new NotFoundException(
+                "Some of the sub-categories does not exist."
             ));
 
         assertThat(mvc.post().uri("/api/inventories")
@@ -176,16 +179,16 @@ class InventoryControllerTest {
     }
 
     @Test
-    void testCreateInventoryReturns409WhenSubCategoryIsNotCompatibleWithCategory() {
+    void testCreateInventoryReturns400WhenSubCategoryIsNotCompatibleWithCategory() {
         when(inventoryService.createInventory(any(CreateInventoryRequest.class)))
-            .thenThrow(new IllegalStateException(
-                "Sub categories is not compatible with category."
+            .thenThrow(new IllegalOperationException(
+                "Sub-categories are not compatible with category."
             ));
 
         assertThat(mvc.post().uri("/api/inventories")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(validInventoryRequest()))
-            .hasStatus(HttpStatus.CONFLICT);
+            .hasStatus(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -275,7 +278,7 @@ class InventoryControllerTest {
         when(inventoryService.updateInventory(
                 eq(999L),
                 any(UpdateInventoryRequest.class)))
-            .thenThrow(new EntityNotFoundException("Inventory not found: 999"));
+            .thenThrow(new NotFoundException("Inventory not found: 999"));
 
         assertThat(mvc.put().uri("/api/inventories/999")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -288,7 +291,7 @@ class InventoryControllerTest {
         when(inventoryService.updateInventory(
                 eq(1L),
                 any(UpdateInventoryRequest.class)))
-            .thenThrow(new EntityNotFoundException("Category does not exist."));
+            .thenThrow(new NotFoundException("Category does not exist: Footwear"));
 
         assertThat(mvc.put().uri("/api/inventories/1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -301,7 +304,7 @@ class InventoryControllerTest {
         when(inventoryService.updateInventory(
                 eq(1L),
                 any(UpdateInventoryRequest.class)))
-            .thenThrow(new EntityNotFoundException("Sub category does not exist."));
+            .thenThrow(new NotFoundException("Sub-category does not exist."));
 
         assertThat(mvc.put().uri("/api/inventories/1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -310,18 +313,18 @@ class InventoryControllerTest {
     }
 
     @Test
-    void testUpdateInventoryReturns409WhenSubCategoryIsNotCompatibleWithCategory() {
+    void testUpdateInventoryReturns400WhenSubCategoryIsNotCompatibleWithCategory() {
         when(inventoryService.updateInventory(
                 eq(1L),
                 any(UpdateInventoryRequest.class)))
-            .thenThrow(new IllegalStateException(
-                "Sub categories is not compatible with category."
+            .thenThrow(new IllegalOperationException(
+                "Sub-categories are not compatible with category."
             ));
 
         assertThat(mvc.put().uri("/api/inventories/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(validUpdateRequest()))
-            .hasStatus(HttpStatus.CONFLICT);
+            .hasStatus(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -335,8 +338,8 @@ class InventoryControllerTest {
             "Running shoe"
         );
         when(inventoryService.updateInventory(eq(1L), eq(request)))
-            .thenThrow(new DuplicateKeyException(
-                "Inventory name and shop name pair already exists."
+            .thenThrow(new DuplicateEntityException(
+                "Inventory already exists: Nike Pegasus - Nike"
             ));
 
         assertThat(mvc.put().uri("/api/inventories/1")
@@ -425,7 +428,7 @@ class InventoryControllerTest {
         when(inventoryService.updateInventoryQuantity(
                 eq(999L),
                 any(UpdateInventoryQuantityRequest.class)))
-            .thenThrow(new EntityNotFoundException("Inventory not found: 999"));
+            .thenThrow(new NotFoundException("Inventory not found: 999"));
 
         assertThat(mvc.patch().uri("/api/inventories/999/quantity")
                 .contentType(MediaType.APPLICATION_JSON)

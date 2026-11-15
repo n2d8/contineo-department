@@ -11,19 +11,20 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MockMvcTester.MockMvcRequestBuilder;
-import org.springframework.web.server.ResponseStatusException;
-
-import jakarta.persistence.EntityNotFoundException;
 
 import com.challenge.department_store.dto.CategoryResponse;
 import com.challenge.department_store.dto.CreateCategoryRequest;
 import com.challenge.department_store.dto.UpdateCategoryRequest;
+import com.challenge.department_store.exception.DuplicateEntityException;
+import com.challenge.department_store.exception.GlobalExceptionHandler;
+import com.challenge.department_store.exception.IllegalOperationException;
+import com.challenge.department_store.exception.NotFoundException;
 import com.challenge.department_store.service.CategoryService;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     value = CategoryController.class,
     properties = "spring.jackson.deserialization.fail-on-unknown-properties=true"
 )
+@Import(GlobalExceptionHandler.class)
 public class CategoryControllerTest {
 
     @Autowired
@@ -67,7 +69,7 @@ public class CategoryControllerTest {
     @Test
     void testCreateCategoryReturns409WhenNameAlreadyExistsIgnoringCase() {
         when(categoryService.createCategory(any(CreateCategoryRequest.class)))
-            .thenThrow(new DuplicateKeyException("Duplicate case-insensitive category name."));
+            .thenThrow(new DuplicateEntityException("Category already exists: Electronics"));
 
         assertThat(mvc.post().uri("/api/categories")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -80,7 +82,7 @@ public class CategoryControllerTest {
     @Test
     void testGetCategoryByNameReturns404WhenNotFound() {
         when(categoryService.getCategoryByName("unknown-category"))
-            .thenThrow(new EntityNotFoundException("Category not found: unknown-category"));
+            .thenThrow(new NotFoundException("Category not found: unknown-category"));
 
         assertThat(mvc.get().uri("/api/categories/unknown-category"))
             .hasStatus(HttpStatus.NOT_FOUND);
@@ -246,10 +248,9 @@ public class CategoryControllerTest {
     }
 
     @Test
-    void testUpdateCategoryReturns409WhenNewSubCategorySetIsInUse() {
+    void testUpdateCategoryReturns400WhenNewSubCategorySetIsInUse() {
         when(categoryService.updateCategory(any(UpdateCategoryRequest.class), eq("footwear")))
-            .thenThrow(new ResponseStatusException(
-                HttpStatus.CONFLICT, "Cannot replace sub categories in use."));
+            .thenThrow(new IllegalOperationException("Cannot replace sub categories in use."));
 
         MockMvcRequestBuilder result = mvc.put()
                 .uri("/api/categories/footwear")
@@ -260,13 +261,13 @@ public class CategoryControllerTest {
                         }
                         """);
 
-        assertThat(result).hasStatus(HttpStatus.CONFLICT);
+        assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
     }
 
     @Test
     void testUpdateCategoryReturns404WhenNotFoundForUnknownCategory() {
         when(categoryService.updateCategory(any(UpdateCategoryRequest.class), eq("unknown-category")))
-            .thenThrow(new EntityNotFoundException("Category not found: unknown-category"));
+            .thenThrow(new NotFoundException("Category not found: unknown-category"));
 
         MockMvcRequestBuilder result = mvc.put()
                 .uri("/api/categories/unknown-category")

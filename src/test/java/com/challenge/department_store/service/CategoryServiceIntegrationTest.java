@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
@@ -23,9 +22,10 @@ import com.challenge.department_store.dto.CreateCategoryRequest;
 import com.challenge.department_store.dto.UpdateCategoryRequest;
 import com.challenge.department_store.entity.Category;
 import com.challenge.department_store.entity.SubCategory;
+import com.challenge.department_store.exception.DuplicateEntityException;
+import com.challenge.department_store.exception.NotFoundException;
 import com.challenge.department_store.repository.CategoryRepository;
 import com.challenge.department_store.repository.SubCategoryRepository;
-import jakarta.persistence.EntityNotFoundException;
 
 @DataJpaTest
 @Import(CategoryService.class)
@@ -146,7 +146,7 @@ class CategoryServiceIntegrationTest {
                         "footwear",
                         Set.of("Sneaker")
                 ))
-        ).isInstanceOf(DuplicateKeyException.class);
+        ).isInstanceOf(DuplicateEntityException.class);
     }
 
     @Test
@@ -198,14 +198,14 @@ class CategoryServiceIntegrationTest {
     }
 
     @Test
-    void testUpdateCategoryThrowsEntityNotFoundExceptionWhenCategoryDoesNotExist() {
+    void testUpdateCategoryThrowsNotFoundExceptionWhenCategoryDoesNotExist() {
         UpdateCategoryRequest request = new UpdateCategoryRequest(
                 Set.of("Shoe")
         );
 
         assertThatThrownBy(() ->
                 categoryService.updateCategory(request, "Unknown")
-        ).isInstanceOf(EntityNotFoundException.class);
+        ).isInstanceOf(NotFoundException.class);
     }
 
     @Test

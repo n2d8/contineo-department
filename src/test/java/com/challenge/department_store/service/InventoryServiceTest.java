@@ -17,8 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DuplicateKeyException;
-
 import com.challenge.department_store.dto.CreateInventoryRequest;
 import com.challenge.department_store.dto.InventoryResponse;
 import com.challenge.department_store.dto.UpdateInventoryQuantityRequest;
@@ -26,11 +24,12 @@ import com.challenge.department_store.dto.UpdateInventoryRequest;
 import com.challenge.department_store.entity.Category;
 import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
+import com.challenge.department_store.exception.DuplicateEntityException;
+import com.challenge.department_store.exception.IllegalOperationException;
+import com.challenge.department_store.exception.NotFoundException;
 import com.challenge.department_store.repository.CategoryRepository;
 import com.challenge.department_store.repository.InventoryRepository;
 import com.challenge.department_store.repository.SubCategoryRepository;
-
-import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 public class InventoryServiceTest {
@@ -253,8 +252,8 @@ public class InventoryServiceTest {
         assertThatThrownBy(() ->
                 inventoryService.createInventory(request)
         )
-                .isInstanceOf(jakarta.persistence.EntityNotFoundException.class)
-                .hasMessageContaining("Category does not exist.");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Category does not exist: Unknown Category");
 
         verify(inventoryRepository, never()).save(any(Inventory.class));
     }
@@ -301,8 +300,8 @@ public class InventoryServiceTest {
         stubExistingSubCategories("Boots");
 
         assertThatThrownBy(() -> inventoryService.createInventory(request))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Sub categories is not compatible with category.");
+                .isInstanceOf(IllegalOperationException.class)
+                .hasMessageContaining("Sub-categories are not compatible with category.");
 
         verify(subCategoryRepository, never()).save(any(SubCategory.class));
         verify(inventoryRepository, never()).save(any(Inventory.class));
@@ -325,8 +324,8 @@ public class InventoryServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> inventoryService.createInventory(request))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("Some of the sub categories does not exist.");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Some of the sub-categories does not exist.");
 
         verify(subCategoryRepository).findByNameIgnoreCase(missingSubCategory);
         verify(inventoryRepository, never()).save(any(Inventory.class));
@@ -354,8 +353,8 @@ public class InventoryServiceTest {
         assertThatThrownBy(() ->
                 inventoryService.createInventory(request)
         )
-                .isInstanceOf(DuplicateKeyException.class)
-                .hasMessageContaining("Inventory name and shop name pair already exists.");
+                .isInstanceOf(DuplicateEntityException.class)
+                .hasMessageContaining("Inventory already exists");
 
         verify(inventoryRepository, never()).save(any(Inventory.class));
     }
@@ -448,8 +447,8 @@ public class InventoryServiceTest {
                 .thenReturn(Optional.of(otherInventory));
 
         assertThatThrownBy(() -> inventoryService.updateInventory(INVENTORY_ID, request))
-                .isInstanceOf(DuplicateKeyException.class)
-                .hasMessageContaining("Inventory name and shop name pair already exists.");
+                .isInstanceOf(DuplicateEntityException.class)
+                .hasMessageContaining("Inventory already exists");
 
         verify(inventoryRepository).findByNameIgnoreCaseAndShopNameIgnoreCase(
                 conflictingName,
@@ -508,7 +507,7 @@ public class InventoryServiceTest {
         assertThatThrownBy(() ->
                 inventoryService.updateInventoryQuantity(999L, request)
         )
-                .isInstanceOf(jakarta.persistence.EntityNotFoundException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Inventory not found");
 
         verify(inventoryRepository, never()).save(any(Inventory.class));
@@ -524,7 +523,7 @@ public class InventoryServiceTest {
                         request
                 )
         )
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(IllegalOperationException.class)
                 .hasMessageContaining("Quantity must not be negative.");
 
         verify(inventoryRepository, never()).save(any(Inventory.class));
@@ -580,7 +579,7 @@ public class InventoryServiceTest {
         assertThatThrownBy(() ->
                 inventoryService.getInventoryById(999L)
         )
-                .isInstanceOf(jakarta.persistence.EntityNotFoundException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Inventory not found");
     }
 }
