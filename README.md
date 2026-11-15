@@ -39,11 +39,11 @@ The following contains the assumptions and requirements to implement the service
 13. Category and sub-category have many to many relationship. "Footwear" and "shoe" can both be a category while a sub-category named "trainers" can be categorized as both footwear and shoe.
 14. Inventory name is not unique, so different users can create an inventory for their specific product even if they have the same product name, however the combination of the inventory name and the shop name must be unique ignoring case.
 15. Secure the API calls with JWK and JWT pair as bonus.
-16. Category names are unique and uniquness is case insensitive, so footwear and FOOTWEAR results the same category.
+16. Category names are unique and uniqueness is case-insensitive, so `footwear` and `FOOTWEAR` refer to the same category.
 17. Instead of using pre-defined enums for categories and sub-categories, we allow free input of these values so we don't limit on the categorization of the inventory and can extend to future potential inventory products.
-18. As this is a department store, their are no consideration of "locking a stock and decrease only on checkout". When a product is sold, the sales representative of the shop updates the inventory afterwards.
+18. As this is a department store, there is no consideration of locking stock and decreasing it only at checkout. When a product is sold, the sales representative updates the inventory afterwards.
 19. Category creation and category updates create sub-categories that do not already exist.
-20. Updating a category replaces its complete sub-category list. A sub-category that is still referenced by an existing inventory record cannot be removed; the error response identifies the protected sub-categories.
+20. Updating a category replaces its complete sub-category list. A sub-category that is still referenced by an existing inventory record cannot be removed.
 
 # API Design
 
@@ -124,12 +124,12 @@ CREATE INDEX idx_inventory_category_id ON inventory (category_id);
 
 # Exception Handling
 
-Custom Exception classes were created for this application to disguish different type of errors and isolate Exceptions from common libraries and the application service Exception.
+Custom exception classes were created to distinguish different types of errors and isolate application exceptions from exceptions thrown by common libraries.
 
-The following are the Eceptions that were created for the service:
+The following Exceptions that were created for the service:
 - DuplicateEntityException: When the requests require creation of a resource but that requested resource already exists.
 - IllegalOperationException: When the requests itself contains issues leading to the service cannot be fulfilled.
-- NotFounException: When the requests require action on resource that expects to exist but can no longer be found at the time of the request was received.
+- - NotFoundException: When a request requires a resource that is expected to exist but cannot be found when the request is received.
 
 The following shows the mapping of Exceptions and the HTTP error status codes:
 |Exception|HTTP Status|Response Error|Example|
