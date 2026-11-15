@@ -40,49 +40,18 @@ public class CategoryController {
 
     @GetMapping("/{name}")
     public CategoryResponse getCategoryByName(@PathVariable @Size(max = 100) String name) {
-        try {
-            return categoryService.getCategoryByName(name);
-        } catch (EntityNotFoundException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage(),
-                exception
-            );
-        }
+        return categoryService.getCategoryByName(name);
     }
 
     @PostMapping 
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponse createCategory(@Valid @RequestBody CreateCategoryRequest request) {
-        try {
-            return categoryService.createCategory(request);
-        } catch (DuplicateKeyException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                exception.getMessage(),
-                exception
-            );
-        }
+        return categoryService.createCategory(request);
     }
 
     @PutMapping("/{name}")
     public CategoryResponse updateCategory(@Valid @RequestBody UpdateCategoryRequest request, 
                                         @PathVariable @Size(max = 100) String name) {
-        //TODO: Create a global exception handler and specific service exceptions.
-        try {
-            return categoryService.updateCategory(request, name);
-        } catch (IllegalStateException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                exception.getMessage(),
-                exception
-            );
-        } catch (EntityNotFoundException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage(),
-                exception
-            );
-        }
+        return categoryService.updateCategory(request, name);
     }
 }

@@ -51,7 +51,7 @@ public class CategoryService {
             () -> new NotFoundException( "Category not found: " + categoryName)
         );
         if (!isSubCategoryUpdateValid(category, request.getSubCategories())) {
-            throw new IllegalOperationException("Cannot replace sub categories in use.");
+            throw new IllegalOperationException("Cannot replace sub-categories in use.");
         }
         category.getSubCategories().clear();
         addSubCategoryFromNames(category, request.getSubCategories());

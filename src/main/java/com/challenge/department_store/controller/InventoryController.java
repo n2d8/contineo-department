@@ -41,76 +41,26 @@ public class InventoryController {
 
     @GetMapping("/{id}")
     public InventoryResponse getInventoryById(@PathVariable Long id) {
-        try {
-            return inventoryService.getInventoryById(id);
-        } catch (EntityNotFoundException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage(),
-                exception
-            );
-        }
+        return inventoryService.getInventoryById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public InventoryResponse createInventory(@Valid @RequestBody CreateInventoryRequest request) {
-        try {
-            return inventoryService.createInventory(request);
-        } catch (EntityNotFoundException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage(),
-                exception
-            );
-        } catch (DuplicateKeyException | IllegalStateException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                exception.getMessage(),
-                exception
-            );
-        }
+        return inventoryService.createInventory(request);
     }
 
     @PutMapping("/{id}")
     public InventoryResponse updateInventory(
             @PathVariable Long id,
             @Valid @RequestBody UpdateInventoryRequest request) {
-        try {
-            return inventoryService.updateInventory(id, request);
-        } catch (EntityNotFoundException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage(),
-                exception
-            );
-        } catch (DuplicateKeyException | IllegalStateException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                exception.getMessage(),
-                exception
-            );
-        }
+        return inventoryService.updateInventory(id, request);
     }
 
     @PatchMapping("/{id}/quantity")
     public InventoryResponse updateInventoryQuantity(
             @PathVariable Long id,
             @Valid @RequestBody UpdateInventoryQuantityRequest request) {
-        try {
-            return inventoryService.updateInventoryQuantity(id, request);
-        } catch (EntityNotFoundException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage(),
-                exception
-            );
-        } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                exception.getMessage(),
-                exception
-            );
-        }
+        return inventoryService.updateInventoryQuantity(id, request);
     }
 }
