@@ -115,3 +115,22 @@ CREATE TABLE inventory_sub_category (
 CREATE UNIQUE INDEX uq_inventory_name_shop_upper
     ON inventory (UPPER(inventory_name), UPPER(shop_name));
 ```
+# Exception Handling
+
+Custom Exception classes were created for this application to disguish different type of errors and isolate Exceptions from common libraries and the application service Exception.
+
+The following are the Eceptions that were created for the service:
+- DuplicateEntityException: When the requests require creation of a resource but that requested resource already exists.
+- IllegalOperationException: When the requests itself contains issues leading to the service cannot be fulfilled.
+- NotFounException: When the requests require action on resource that expects to exist but can no longer be found at the time of the request was received.
+
+The following shows the mapping of Exceptions and the HTTP error status codes:
+|Exception|HTTP Status|Response Error|Example|
+|DuplicateEntityException|409 Conflict|Conflict|Category already exists: SomeExistingCategory|
+|IllegalOperationException|400 Bad Request|Bad Request|Cannot replace sub-categories in use.|
+|NotFoundException|404 Not Found|NotFound|Category not found: SomeUnknownCategory|
+|MethodArgumentNotValidException|400 Bad Request|Bad Request|name: must not be blank|
+|HttpMessageNotReadableException|400 Bad Request|Bad Request|Malformed or invalid request body|
+|MethodArgumentTypeMismatchException|400 Bad Request|Bad Request|Invalid value for path parameter: id|
+|DataIntegrityViolationException|409 Conflict|Conflict|The request conflicts with existing data|
+|Exception|500 Internal Server Error|Internal Server Error|An unexpected error occurred|
