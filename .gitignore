@@ -27,6 +27,7 @@ replay_pid*
 target/
 HELP.md
 /config/
+manual/
 
 # Testing Powershell scripts
 *.ps1

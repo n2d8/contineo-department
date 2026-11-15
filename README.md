@@ -126,6 +126,7 @@ The following are the Eceptions that were created for the service:
 
 The following shows the mapping of Exceptions and the HTTP error status codes:
 |Exception|HTTP Status|Response Error|Example|
+|---|---|---|---|
 |DuplicateEntityException|409 Conflict|Conflict|Category already exists: SomeExistingCategory|
 |IllegalOperationException|400 Bad Request|Bad Request|Cannot replace sub-categories in use.|
 |NotFoundException|404 Not Found|NotFound|Category not found: SomeUnknownCategory|
@@ -135,7 +136,7 @@ The following shows the mapping of Exceptions and the HTTP error status codes:
 |DataIntegrityViolationException|409 Conflict|Conflict|The request conflicts with existing data|
 |Exception|500 Internal Server Error|Internal Server Error|An unexpected error occurred|
 
-## API documentation
+# API documentation
 
 When the application is running, OpenAPI documentation is available at:
 
@@ -143,9 +144,9 @@ When the application is running, OpenAPI documentation is available at:
 - OpenAPI JSON: http://localhost:8080/v3/api-docs
 - OpenAPI YAML: http://localhost:8080/v3/api-docs.yaml
 
-## JWT Authentication
+# JWT Authentication
 
-The application validates JWT bearer tokens against a locally available JWKS file; it does not issue tokens or manage users. Authentication is disabled by default for local development. **When disabled, every endpoint is open.** Deployments must explicitly enable JWT authentication and supply all required configuration.
+JWT authentication is implemented in this application but is only enabled with environment variables. Use the environment variable to set a JWKs file from the local file system, set the expected audience and issuer then enable the authentication. Once enabled, the security filter chain will apply the access policy requiring authentication for every request.
 
 Configure these environment variables to enable authentication:
 
@@ -156,6 +157,15 @@ Configure these environment variables to enable authentication:
 | `JWT_ISSUER` | Expected `iss` claim for incoming tokens. |
 | `JWT_AUDIENCE` | Expected audience value in the token's `aud` claim. |
 
-For example, mount the issuer's public JWKS ile into the application container and configure its path along with the expected issuer and audience. Do not commit keys or place private signing keys in the JWKS file; token signing belongs to the identity provider. The application accepts RS256-signed tokens only and requires a valid issuer, audience, and expiration claim. Missing or invalid security configuration causes startup to fail when authentication is enabled.
-
 When enabled, authentication applies to all routes, including Swagger/OpenAPI documentation and the H2 console. Send tokens using `Authorization: Bearer <token>`.
+
+Tokens must be signed with RS256 and JWKs files must contain the matching public RSA key.
+
+```powershell
+# Set environment variables
+
+$env:JWT_AUTH_ENABLED = "true"
+$env:JWT_JWK_SET_FILE = "C:\path\to\jwks.json"
+$env:JWT_ISSUER = "your-issuer"
+$env:JWT_AUDIENCE = "your-api-audience"
+```
