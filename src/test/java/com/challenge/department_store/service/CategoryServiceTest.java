@@ -174,7 +174,7 @@ class CategoryServiceTest {
                 categoryService.updateCategory(request, "Footwear")
         )
                 .isInstanceOf(IllegalOperationException.class)
-                .hasMessageContaining("Cannot replace sub categories in use");
+                .hasMessageContaining("Cannot replace sub-categories in use");
 
         verify(categoryRepository, org.mockito.Mockito.never()).save(any(Category.class));
     }
