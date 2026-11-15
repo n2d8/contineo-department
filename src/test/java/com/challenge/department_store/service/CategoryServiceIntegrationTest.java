@@ -21,6 +21,7 @@ import com.challenge.department_store.dto.CategoryResponse;
 import com.challenge.department_store.dto.CreateCategoryRequest;
 import com.challenge.department_store.dto.UpdateCategoryRequest;
 import com.challenge.department_store.entity.Category;
+import com.challenge.department_store.entity.Inventory;
 import com.challenge.department_store.entity.SubCategory;
 import com.challenge.department_store.exception.DuplicateEntityException;
 import com.challenge.department_store.exception.NotFoundException;
@@ -195,6 +196,35 @@ class CategoryServiceIntegrationTest {
                 .orElseThrow();
 
         assertThat(updatedCategory.getSubCategories()).isEmpty();
+    }
+
+    @Test
+    void testUpdateCategoryAllowsCaseInsensitiveRetentionOfSubCategoryUsedByInventory() {
+        String suffix = UUID.randomUUID().toString();
+        String categoryName = "Footwear " + suffix;
+        String shoeName = "Shoe " + suffix;
+        Category category = new Category(categoryName);
+        category.addSubCategory(new SubCategory(shoeName));
+        category.addSubCategory(new SubCategory("Trainers " + suffix));
+        persistCategory(category);
+
+        Category persistedCategory = categoryRepository.findByNameIgnoreCase(categoryName).orElseThrow();
+        SubCategory persistedShoe = subCategoryRepository.findByNameIgnoreCase(shoeName).orElseThrow();
+        entityManager.persistAndFlush(new Inventory(
+                "Inventory " + suffix,
+                "Shop " + suffix,
+                persistedCategory,
+                5,
+                "Test inventory",
+                Set.of(persistedShoe)
+        ));
+
+        CategoryResponse response = categoryService.updateCategory(
+                new UpdateCategoryRequest(Set.of(shoeName.toLowerCase())),
+                categoryName
+        );
+
+        assertThat(response.subCategories()).containsExactly(shoeName);
     }
 
     @Test
