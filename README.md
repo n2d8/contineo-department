@@ -126,22 +126,22 @@ CREATE INDEX idx_inventory_category_id ON inventory (category_id);
 
 Custom exception classes were created to distinguish different types of errors and isolate application exceptions from exceptions thrown by common libraries.
 
-The following Exceptions that were created for the service:
+The following Exceptions were created for the service:
 - DuplicateEntityException: When the requests require creation of a resource but that requested resource already exists.
-- IllegalOperationException: When the requests itself contains issues leading to the service cannot be fulfilled.
+- IllegalOperationException: When a request contains an issue that prevents the service from fulfilling it.
 - NotFoundException: When a request requires a resource that is expected to exist but cannot be found when the request is received.
 
 The following shows the mapping of Exceptions and the HTTP error status codes:
-|Exception|HTTP Status|Response Error|Example|
+| Exception |HTTP Status | Response Error | Example |
 |---|---|---|---|
-|DuplicateEntityException|409 Conflict|Conflict|Category already exists: SomeExistingCategory|
-|IllegalOperationException|400 Bad Request|Bad Request|Cannot replace sub-categories in use.|
-|NotFoundException|404 Not Found|Not Found|Category not found: SomeUnknownCategory|
-|MethodArgumentNotValidException|400 Bad Request|Bad Request|name: must not be blank|
-|HttpMessageNotReadableException|400 Bad Request|Bad Request|Malformed or invalid request body|
-|MethodArgumentTypeMismatchException|400 Bad Request|Bad Request|Invalid value for path parameter: id|
-|DataIntegrityViolationException|409 Conflict|Conflict|The request conflicts with existing data|
-|Exception|500 Internal Server Error|Internal Server Error|An unexpected error occurred|
+| DuplicateEntityException | 409 Conflict | Conflict | Category already exists: SomeExistingCategory |
+| IllegalOperationException | 400 Bad Request | Bad Request | Cannot replace sub-categories in use. |
+| NotFoundException | 404 Not Found | Not Found | Category not found: SomeUnknownCategory |
+| MethodArgumentNotValidException | 400 Bad Request | Bad Request | name: must not be blank |
+| HttpMessageNotReadableException | 400 Bad Request | Bad Request | Malformed or invalid request body. |
+| MethodArgumentTypeMismatchException | 400 Bad Request | Bad Reques | Invalid value for path parameter: id |
+| DataIntegrityViolationException | 409 Conflict | Conflict | The request conflicts with existing data. |
+| Exception | 500 Internal Server Error | Internal Server Error | An unexpected error occurred. |
 
 # API documentation
 
@@ -159,12 +159,12 @@ Configure these environment variables to enable authentication:
 
 | Environment variable | Purpose |
 |---|---|
-| `JWT_AUTH_ENABLED` | Set to `true` to require authentication for every request. |
+| `JWT_AUTH_ENABLED` | Set to `true` to require authentication for inventory and category API routes. |
 | `JWT_JWK_SET_FILE` | Path to a JWKS JSON file containing public RSA signing keys. |
 | `JWT_ISSUER` | Expected `iss` claim for incoming tokens. |
 | `JWT_AUDIENCE` | Expected audience value in the token's `aud` claim. |
 
-When enabled, authentication applies to all inventory and category API routes. Swagger UI, OpenAPI documentation, and the H2 console remain publicly accessible. Send tokens using `Authorization: Bearer <token>`.
+When enabled, authentication applies to all inventory and category API routes. Swagger UI and OpenAPI documentation remain publicly accessible. Send tokens using `Authorization: Bearer <token>`.
 
 Tokens must be signed with RS256 and JWKs files must contain the matching public RSA key.
 
