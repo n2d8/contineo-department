@@ -110,4 +110,7 @@ CREATE TABLE inventory_sub_category (
     FOREIGN KEY (inventory_id) REFERENCES inventory(id),
     FOREIGN KEY (sub_category_id) REFERENCES sub_category(id)
 );
+
+CREATE UNIQUE INDEX uq_inventory_name_shop_upper
+    ON inventory (UPPER(inventory_name), UPPER(shop_name));
 ```
