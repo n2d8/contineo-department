@@ -112,8 +112,13 @@ CREATE TABLE inventory_sub_category (
     FOREIGN KEY (sub_category_id) REFERENCES sub_category(id)
 );
 
-CREATE UNIQUE INDEX uq_inventory_name_shop_upper
-    ON inventory (UPPER(inventory_name), UPPER(shop_name));
+CREATE UNIQUE INDEX uq_category_name_upper ON category (UPPER(category_name));
+
+CREATE UNIQUE INDEX uq_sub_category_name_upper ON sub_category (UPPER(sub_category_name));
+
+CREATE UNIQUE INDEX uq_inventory_name_shop_upper ON inventory (UPPER(inventory_name), UPPER(shop_name));
+
+CREATE INDEX idx_inventory_category_id ON inventory (category_id);
 ```
 # Exception Handling
 
