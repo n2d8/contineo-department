@@ -32,7 +32,7 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    @GetMapping 
+    @GetMapping
     public List<CategoryResponse> getAllCategories() {
         return categoryService.getAllCategories();
     }
