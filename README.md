@@ -139,7 +139,7 @@ The following shows the mapping of Exceptions and the HTTP error status codes:
 | NotFoundException | 404 Not Found | Not Found | Category not found: SomeUnknownCategory |
 | MethodArgumentNotValidException | 400 Bad Request | Bad Request | name: must not be blank |
 | HttpMessageNotReadableException | 400 Bad Request | Bad Request | Malformed or invalid request body. |
-| MethodArgumentTypeMismatchException | 400 Bad Request | Bad Reques | Invalid value for path parameter: id |
+| MethodArgumentTypeMismatchException | 400 Bad Request | Bad Request | Invalid value for path parameter: id |
 | DataIntegrityViolationException | 409 Conflict | Conflict | The request conflicts with existing data. |
 | Exception | 500 Internal Server Error | Internal Server Error | An unexpected error occurred. |
 
