@@ -134,3 +134,11 @@ The following shows the mapping of Exceptions and the HTTP error status codes:
 |MethodArgumentTypeMismatchException|400 Bad Request|Bad Request|Invalid value for path parameter: id|
 |DataIntegrityViolationException|409 Conflict|Conflict|The request conflicts with existing data|
 |Exception|500 Internal Server Error|Internal Server Error|An unexpected error occurred|
+
+## API documentation
+
+When the application is running, OpenAPI documentation is available at:
+
+- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+- OpenAPI YAML: http://localhost:8080/v3/api-docs.yaml

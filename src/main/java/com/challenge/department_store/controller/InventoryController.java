@@ -20,8 +20,10 @@ import com.challenge.department_store.dto.UpdateInventoryQuantityRequest;
 import com.challenge.department_store.dto.UpdateInventoryRequest;
 import com.challenge.department_store.service.InventoryService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+@Tag(name = "Inventory API", description = "Endpoints to manage inventory record for products")
 @RestController 
 @RequestMapping("/api/inventories")
 public class InventoryController {

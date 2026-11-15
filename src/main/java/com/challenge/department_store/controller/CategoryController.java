@@ -17,9 +17,11 @@ import com.challenge.department_store.dto.CreateCategoryRequest;
 import com.challenge.department_store.dto.UpdateCategoryRequest;
 import com.challenge.department_store.service.CategoryService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 
+@Tag(name = "Category API", description = "Endpoints to manage inventory categories")
 @RestController 
 @RequestMapping("/api/categories")
 public class CategoryController {
