@@ -64,7 +64,7 @@ public class Inventory {
         this.category = category;
         this.quantity = quantity;
         this.description = description;
-        this.subCategories = subCategories;
+        this.subCategories = new HashSet<>(subCategories);
     }
 
     public Long getId() {

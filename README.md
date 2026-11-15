@@ -39,9 +39,11 @@ The following contains the assumptions and requirements to implement the service
 13. Category and sub-category have many to many relationship. "Footwear" and "shoe" can both be a category while a sub-category named "trainers" can be categorized as both footwear and shoe.
 14. Inventory name is not unique, so different users can create an inventory for their specific product even if they have the same product name, however the combination of the inventory name and the shop name must be unique ignoring case.
 15. Secure the API calls with JWK and JWT pair as bonus.
-16. Category names are unique and the uniquness is case insensitive, so footwear and FOOTWEAR results the same category.
+16. Category names are unique and uniquness is case insensitive, so footwear and FOOTWEAR results the same category.
 17. Instead of using pre-defined enums for categories and sub-categories, we allow free input of these values so we don't limit on the categorization of the inventory and can extend to future potential inventory products.
 18. As this is a department store, their are no consideration of "locking a stock and decrease only on checkout". When a product is sold, the sales representative of the shop updates the inventory afterwards.
+19. Category creation and category updates create sub-categories that do not already exist.
+20. Updating a category replaces its complete sub-category list. A sub-category that is still referenced by an existing inventory record cannot be removed; the error response identifies the protected sub-categories.
 
 # API Design
 
@@ -68,7 +70,6 @@ Outline the endpoints needed in the API to fulfil the above requirements and ass
     - Update the list of sub-categories of a category.
     - Validate the updated sub-category list against all existing inventory records that use the category.
     - Reject the update if it would remove a sub-category that is still used by an existing inventory record.
-    - Return an error identifying the sub-category or sub-categories that must remain available.
 
 # Database Schema
 
@@ -152,7 +153,7 @@ When the application is running, OpenAPI documentation is available at:
 
 # JWT Authentication
 
-JWT authentication is implemented in this application but is only enabled with environment variables. Use the environment variable to set a JWKs file from the local file system, set the expected audience and issuer then enable the authentication. Once enabled, the security filter chain will apply the access policy requiring authentication for every request.
+JWT authentication is an optional bonus feature. It is disabled by default and is enabled only when the `JWT_AUTH_ENABLED` environment variable is set to `true`. Use the environment variable to set a JWKs file from the local file system, set the expected audience and issuer then enable the authentication. Once enabled, the security filter chain will apply the access policy requiring authentication for every request.
 
 Configure these environment variables to enable authentication:
 
@@ -163,7 +164,7 @@ Configure these environment variables to enable authentication:
 | `JWT_ISSUER` | Expected `iss` claim for incoming tokens. |
 | `JWT_AUDIENCE` | Expected audience value in the token's `aud` claim. |
 
-When enabled, authentication applies to all routes, including Swagger/OpenAPI documentation and the H2 console. Send tokens using `Authorization: Bearer <token>`.
+When enabled, authentication applies to all inventory and category API routes. Swagger UI, OpenAPI documentation, and the H2 console remain publicly accessible. Send tokens using `Authorization: Bearer <token>`.
 
 Tokens must be signed with RS256 and JWKs files must contain the matching public RSA key.
 

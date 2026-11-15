@@ -161,8 +161,8 @@ public class InventoryService {
         );
     }
 
-    private void ifInventoryExists(String categoryName, String shopName) {
-        inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(categoryName, shopName)
+    private void ifInventoryExists(String inventoryName, String shopName) {
+        inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(inventoryName, shopName)
             .ifPresent(foundInventory -> {
                 throw new DuplicateEntityException(
                     "Inventory already exists: " + foundInventory.getName() + " - " + foundInventory.getShopName()

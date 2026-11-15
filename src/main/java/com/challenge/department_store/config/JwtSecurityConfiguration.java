@@ -45,7 +45,14 @@ public class JwtSecurityConfiguration {
         );
 
         if (jwtEnabled) {
-            http.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+            http.authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/h2-console/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        .anyRequest()
+                        .authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer.jwt(Customizer.withDefaults()));
         } else {
             http.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());

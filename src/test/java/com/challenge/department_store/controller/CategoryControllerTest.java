@@ -324,4 +324,23 @@ public class CategoryControllerTest {
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
         verifyNoInteractions(categoryService);
     }
+
+    @Test
+    void testUpdateCategoryReturns400WhenRemovingSubCategoryUsedByInventory() {
+        when(categoryService.updateCategory(
+                any(UpdateCategoryRequest.class),
+                eq("Footwear")))
+            .thenThrow(new IllegalOperationException(
+                "Cannot replace sub-categories in use."
+            ));
+
+        assertThat(mvc.put().uri("/api/categories/Footwear")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                    "subCategories": ["Boots"]
+                    }
+                    """))
+            .hasStatus(HttpStatus.BAD_REQUEST);
+    }
 }
