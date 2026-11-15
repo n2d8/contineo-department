@@ -439,7 +439,7 @@ public class InventoryServiceTest {
                 SHOE_SUBCATEGORY_NAME
         );
 
-        when(inventoryRepository.findById(INVENTORY_ID))
+        when(inventoryRepository.findByIdForUpdate(INVENTORY_ID))
                 .thenReturn(Optional.of(existingInventory));
         when(inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(
                 conflictingName,
@@ -462,7 +462,7 @@ public class InventoryServiceTest {
     void testUpdateInventoryQuantityUpdatesExistingInventory() {
         UpdateInventoryQuantityRequest request = new UpdateInventoryQuantityRequest(25);
 
-        when(inventoryRepository.findById(INVENTORY_ID))
+        when(inventoryRepository.findByIdForUpdate(INVENTORY_ID))
                 .thenReturn(Optional.of(existingInventory));
         when(inventoryRepository.save(existingInventory))
                 .thenReturn(existingInventory);
@@ -482,7 +482,7 @@ public class InventoryServiceTest {
     void testUpdateInventoryQuantityAllowsZeroQuantity() {
         UpdateInventoryQuantityRequest request = new UpdateInventoryQuantityRequest(0);
 
-        when(inventoryRepository.findById(INVENTORY_ID))
+        when(inventoryRepository.findByIdForUpdate(INVENTORY_ID))
                 .thenReturn(Optional.of(existingInventory));
         when(inventoryRepository.save(existingInventory))
                 .thenReturn(existingInventory);
@@ -502,7 +502,7 @@ public class InventoryServiceTest {
     void testUpdateInventoryQuantityThrowsForUnknownInventory() {
         UpdateInventoryQuantityRequest request = new UpdateInventoryQuantityRequest(25);
 
-        when(inventoryRepository.findById(999L))
+        when(inventoryRepository.findByIdForUpdate(999L))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->

@@ -63,6 +63,20 @@ class InventoryRepositoryTest {
     }
 
     @Test
+    void testFindByIdForUpdateReturnsInventory() {
+        Inventory savedInventory = inventoryRepository.saveAndFlush(inventory);
+
+        Optional<Inventory> lockedInventory =
+                inventoryRepository.findByIdForUpdate(savedInventory.getId());
+
+        assertThat(lockedInventory)
+                .isPresent()
+                .get()
+                .extracting(Inventory::getId)
+                .isEqualTo(savedInventory.getId());
+    }
+
+    @Test
     void testFindByNameIgnoreCaseAndShopNameIgnoreCase() {
         inventoryRepository.saveAndFlush(inventory);
         Inventory retieveInventory = inventoryRepository.findByNameIgnoreCaseAndShopNameIgnoreCase(inventory.getName(), inventory.getShopName()).orElseThrow();

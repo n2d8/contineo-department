@@ -72,7 +72,7 @@ public class InventoryService {
 
     @Transactional
     public InventoryResponse updateInventory(Long id, UpdateInventoryRequest request) {
-        Inventory inventory = getInventory(id);
+        Inventory inventory = getInventoryForUpdate(id);
         
         if (!(inventory.getName().equalsIgnoreCase(request.name()) && 
                 inventory.getShopName().equalsIgnoreCase(request.shopName()))) {
@@ -102,7 +102,7 @@ public class InventoryService {
             //TODO: Replace IllegalArgumentException with dedicated business logic Exception instead
             throw new IllegalArgumentException("Quantity must not be negative.");
         }
-        Inventory inventory = getInventory(id);
+        Inventory inventory = getInventoryForUpdate(id);
         inventory.setQuantity(request.quantity());
         return InventoryResponse.from(inventoryRepository.save(inventory));
     }
@@ -147,6 +147,13 @@ public class InventoryService {
         return inventoryRepository.findById(id).orElseThrow(
             //TODO: Replace EntityNotFoundException with dedicated business logic Exception instead
             () -> new EntityNotFoundException( "Inventory not found: " + id)
+        );
+    }
+
+    private Inventory getInventoryForUpdate(Long id) {
+        return inventoryRepository.findByIdForUpdate(id).orElseThrow(
+            //TODO: Replace EntityNotFoundException with dedicated business logic Exception instead
+            () -> new EntityNotFoundException("Inventory not found: " + id)
         );
     }
 
