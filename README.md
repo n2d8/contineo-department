@@ -120,6 +120,7 @@ CREATE UNIQUE INDEX uq_inventory_name_shop_upper ON inventory (UPPER(inventory_n
 
 CREATE INDEX idx_inventory_category_id ON inventory (category_id);
 ```
+
 # Exception Handling
 
 Custom Exception classes were created for this application to disguish different type of errors and isolate Exceptions from common libraries and the application service Exception.
