@@ -142,3 +142,20 @@ When the application is running, OpenAPI documentation is available at:
 - Swagger UI: http://localhost:8080/swagger-ui/index.html
 - OpenAPI JSON: http://localhost:8080/v3/api-docs
 - OpenAPI YAML: http://localhost:8080/v3/api-docs.yaml
+
+## JWT Authentication
+
+The application validates JWT bearer tokens against a locally available JWKS file; it does not issue tokens or manage users. Authentication is disabled by default for local development. **When disabled, every endpoint is open.** Deployments must explicitly enable JWT authentication and supply all required configuration.
+
+Configure these environment variables to enable authentication:
+
+| Environment variable | Purpose |
+|---|---|
+| `JWT_AUTH_ENABLED` | Set to `true` to require authentication for every request. |
+| `JWT_JWK_SET_FILE` | Path to a JWKS JSON file containing public RSA signing keys. |
+| `JWT_ISSUER` | Expected `iss` claim for incoming tokens. |
+| `JWT_AUDIENCE` | Expected audience value in the token's `aud` claim. |
+
+For example, mount the issuer's public JWKS ile into the application container and configure its path along with the expected issuer and audience. Do not commit keys or place private signing keys in the JWKS file; token signing belongs to the identity provider. The application accepts RS256-signed tokens only and requires a valid issuer, audience, and expiration claim. Missing or invalid security configuration causes startup to fail when authentication is enabled.
+
+When enabled, authentication applies to all routes, including Swagger/OpenAPI documentation and the H2 console. Send tokens using `Authorization: Bearer <token>`.
