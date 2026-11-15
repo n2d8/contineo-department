@@ -19,7 +19,7 @@ This application implements an inventory service for the department store, the m
 - Validation Rules
     - Validation rules to determine category and sub-category compatibility.
 
-# Requirements and Assumptions
+# Requirements, Decisions and Assumptions
 
 The service tracks the product inventory of the Department Store.
 
@@ -41,6 +41,7 @@ The following contains the assumptions and requirements to implement the service
 15. Secure the API calls with JWK and JWT pair as bonus.
 16. Category names are unique and the uniquness is case insensitive, so footwear and FOOTWEAR results the same category.
 17. Instead of using pre-defined enums for categories and sub-categories, we allow free input of these values so we don't limit on the categorization of the inventory and can extend to future potential inventory products.
+18. As this is a department store, their are no consideration of "locking a stock and decrease only on checkout". When a product is sold, the sales representative of the shop updates the inventory afterwards.
 
 # API Design
 
