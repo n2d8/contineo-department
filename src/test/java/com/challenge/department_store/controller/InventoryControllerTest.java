@@ -460,6 +460,27 @@ class InventoryControllerTest {
         verifyNoInteractions(inventoryService);
     }
 
+    @Test
+    void testDeleteInventoryReturns204AndDelegatesId() {
+        assertThat(mvc.delete().uri("/api/inventories/1"))
+            .hasStatus(HttpStatus.NO_CONTENT)
+            .body().isEmpty();
+
+        verify(inventoryService).deleteInventory(1L);
+    }
+
+    @Test
+    void testDeleteInventoryReturns404WhenInventoryDoesNotExist() {
+        org.mockito.Mockito.doThrow(new NotFoundException("Inventory not found: 999"))
+            .when(inventoryService)
+            .deleteInventory(999L);
+
+        assertThat(mvc.delete().uri("/api/inventories/999"))
+            .hasStatus(HttpStatus.NOT_FOUND);
+
+        verify(inventoryService).deleteInventory(999L);
+    }
+
     private static InventoryResponse inventory(
             Long id,
             String name,

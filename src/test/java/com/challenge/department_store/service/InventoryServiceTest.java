@@ -582,4 +582,26 @@ public class InventoryServiceTest {
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Inventory not found");
     }
+
+    @Test
+    void testDeleteInventoryDeletesExistingInventory() {
+        when(inventoryRepository.findById(INVENTORY_ID))
+                .thenReturn(Optional.of(existingInventory));
+
+        inventoryService.deleteInventory(INVENTORY_ID);
+
+        verify(inventoryRepository).delete(existingInventory);
+    }
+
+    @Test
+    void testDeleteInventoryThrowsWhenInventoryDoesNotExist() {
+        when(inventoryRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> inventoryService.deleteInventory(999L))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Inventory not found: 999");
+
+        verify(inventoryRepository, never()).delete(any(Inventory.class));
+    }
 }

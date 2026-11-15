@@ -5,6 +5,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,8 @@ public class InventoryService {
     private final InventoryRepository inventoryRepository;
     private final CategoryRepository categoryRepository;
     private final SubCategoryRepository subCategoryRepository;
+
+    private final Logger logger = LoggerFactory.getLogger(InventoryService.class);
 
     public InventoryService(InventoryRepository inventoryRepository,
                             CategoryRepository categoryRepository,
@@ -98,6 +102,16 @@ public class InventoryService {
         Inventory inventory = getInventoryForUpdate(id);
         inventory.setQuantity(request.quantity());
         return InventoryResponse.from(inventoryRepository.save(inventory));
+    }
+
+    @Transactional 
+    public void deleteInventory(Long id) {
+        logger.debug("Deleting inventory with id: {}", id);
+        
+        Inventory inventory = getInventory(id);
+        inventoryRepository.delete(inventory);
+
+        logger.debug("Succssfully deleted inventory - id: {}, name: {}", inventory.getId(), inventory.getName());
     }
 
     private SubCategory findSubCategoryOrElseThrow(String subCategoryName) {

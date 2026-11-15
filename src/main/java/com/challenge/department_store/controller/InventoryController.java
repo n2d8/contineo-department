@@ -3,6 +3,7 @@ package com.challenge.department_store.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,5 +60,11 @@ public class InventoryController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateInventoryQuantityRequest request) {
         return inventoryService.updateInventoryQuantity(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteInventory(@PathVariable Long id) {
+        inventoryService.deleteInventory(id);
     }
 }
